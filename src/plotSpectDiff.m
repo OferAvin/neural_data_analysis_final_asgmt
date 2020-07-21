@@ -1,7 +1,8 @@
 function plotSpectDiff(freq,time,condition)
-    leftDiff = condition{1}-condition{3};
-    rightDiff = condition{2}-condition{4};
-    spectDiffCond = {leftDiff,rightDiff};
+    C3Diff = condition{1}-condition{3};
+    C4Diff = condition{2}-condition{4};
+    spectDiffCond = {C3Diff,C4Diff};
+    diffTitle = {'C3Diff','C4Diff'};
     figure
     for i = 1:length(spectDiffCond)
         subplot(length(spectDiffCond),1,i)
@@ -11,7 +12,7 @@ function plotSpectDiff(freq,time,condition)
         set(gca,'YDir','normal')
         colormap(jet);
         axis square
-        %sgtitle((spectDiffCond{i}))
+        title(diffTitle{i})
         ylabel ('Frequency [Hz]');
         if(i>1)
             xlabel ('Time [sec]');

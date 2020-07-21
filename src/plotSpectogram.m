@@ -1,4 +1,4 @@
-function plotSpectogram(freq,time,condition,title)
+function plotSpectogram(freq,time,condition,generalTitle)
     figure
     for i = 1:length(condition)
         subplot(2,2,i)
@@ -8,7 +8,7 @@ function plotSpectogram(freq,time,condition,title)
         set(gca,'YDir','normal')
         colormap(jet);
         axis square
-        %sgtitle(title{i});
+        title(generalTitle{i});
         if(i==1)
             ylabel ('Frequency [Hz]');
         end

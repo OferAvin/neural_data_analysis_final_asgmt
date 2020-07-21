@@ -12,7 +12,7 @@ windLen = 4;               % signal length in secs
 windStep = 2;              % window step in secs
 pwelchWindow = 2*Fs;           %window length in secs
 pwelchOverlap = 1.5*Fs;          %window overlap length in secs
-motorImageryRange = 2.5*Fs:6*Fs;
+motorImageryRange = 2.25*Fs:6*Fs;
 %bends
 nFreqBands = 6;
 delta = 0.5:0.1:4.5;
@@ -31,7 +31,7 @@ left_C3 = P_C_S.data(left_index,:,1);
 right_C3 = P_C_S.data(right_index,:,1);
 left_C4 = P_C_S.data(left_index,:,2);
 right_C4 = P_C_S.data(right_index,:,2);
-title = {'left C3','right C3','left C4','right C4'};
+generalTitle = {'left C3','right C3','left C4','right C4'};
 
 first_visualization(P_C_S.data,P_C_S.attribute,3,5,4)
 first_visualization(P_C_S.data,P_C_S.attribute,4,5,4)
@@ -42,7 +42,7 @@ C3RightPwelch = pwelch(right_C3(:,motorImageryRange)',pwelchWindow,pwelchOverlap
 C4LeftPwelch = pwelch(left_C4(:,motorImageryRange)',pwelchWindow,pwelchOverlap,f,Fs);
 C4RightPwelch = pwelch(right_C4(:,motorImageryRange)',pwelchWindow,pwelchOverlap,f,Fs);
 PwelchCond = {C3LeftPwelch,C3RightPwelch,C4LeftPwelch,C4RightPwelch};
-plotPwelch(PwelchCond,f)
+plotPwelch(PwelchCond,f,generalTitle)
 
 comparePowerSpec(C3LeftPwelch,C3RightPwelch,C4LeftPwelch,C4RightPwelch,f)
 
@@ -65,7 +65,7 @@ spect_right_C3 = squeeze(mean(10*log10(abs(spect_right_C3)).^2));
 spect_right_C4 = squeeze(mean(10*log10(abs(spect_right_C4)).^2));
 
 spectCondition = {spect_left_C3,spect_left_C4,spect_right_C3,spect_right_C4};
-plotSpectogram(f,timeVec,spectCondition,title)
+plotSpectogram(f,timeVec,spectCondition,generalTitle)
 plotSpectDiff(f,timeVec,spectCondition) 
 
 

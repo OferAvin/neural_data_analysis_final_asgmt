@@ -66,7 +66,8 @@ spect_right_C4 = squeeze(mean(10*log10(abs(spect_right_C4)).^2));
 
 spectCondition = {spect_left_C3,spect_left_C4,spect_right_C3,spect_right_C4};
 plotSpectogram(f,timeVec,spectCondition,generalTitle)
-plotSpectDiff(f,timeVec,spectCondition) 
+plotSpectDiff(f,timeVec,spectCondition,1) 
+plotSpectDiff(f,timeVec,spectCondition,0) 
 
 
 

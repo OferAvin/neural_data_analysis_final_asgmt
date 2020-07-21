@@ -1,8 +1,15 @@
-function plotSpectDiff(freq,time,condition)
-    C3Diff = condition{1}-condition{3};
-    C4Diff = condition{2}-condition{4};
-    spectDiffCond = {C3Diff,C4Diff};
-    diffTitle = {'C3Diff','C4Diff'};
+function plotSpectDiff(freq,time,condition,flag)
+    if flag == 1
+        diff1 = condition{1}-condition{3};
+        diff2 = condition{2}-condition{4};
+        spectDiffCond = {diff1,diff2};
+        diffTitle = {'C3Diff','C4Diff'};
+    else
+        diff1 = condition{1}-condition{2};
+        diff2 = condition{3}-condition{4};
+        spectDiffCond = {diff1,diff2};
+        diffTitle = {'left Diff','right Diff'};
+    end
     figure
     for i = 1:length(spectDiffCond)
         subplot(length(spectDiffCond),1,i)

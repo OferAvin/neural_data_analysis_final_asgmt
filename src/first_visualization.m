@@ -8,9 +8,21 @@ function first_visualization(data,lable,lableNum,row,col)
 %        sgtitle('right')
 %    end
    for i = 1:length(index_trails)
-    subplot(row,col,i)
-    plot(data(index_trails(i),:,1),'r')
+        subplot(row,col,i)
+        C3 = plot(data(index_trails(i),:,1),'r');
+        hold on
+        C4 = plot(data(index_trails(i),:,2),'b');
+        ylim([-20,20])
+        if(i==20)
+            xlabel('Nsample');
+        end
+        if(i==1)
+            ylabel('Mv');
+        end
+   end
     hold on
-    plot(data(index_trails(i),:,2),'b')
-    end
+    Leg = legend([C3,C4],{'C3','C4'});
+    newUnits = 'normalized';
+    set(Leg,'Position',[0.848091556210113 0.925793650793651 0.113690476190476 0.071031746031746],'Units', newUnits);
+    
 end

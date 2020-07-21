@@ -1,20 +1,14 @@
-function plotPwelch(C3LeftPwelch,C3RightPwelch,C4LeftPwelch,C4RightPwelch,freq)
+function plotPwelch(condition,freq)
     figure
-    subplot(2,2,1)
-    plot(freq,mean(C3LeftPwelch,2),'b')
-    %sgtitle('C3_left')
-    ylabel('Power')
-    subplot(2,2,2)
-    plot(freq,mean(C4LeftPwelch,2),'b')
-    %sgtitle('C4_left')
-    legend('left')
-    subplot(2,2,3)
-    plot(freq,mean(C3RightPwelch,2),'r')
-    %sgtitle('C3_right')
-    subplot(2,2,4)
-    plot(freq,mean(C4RightPwelch,2),'r')
-    %sgtitle('C4_right')
-    xlabel('Frequency[Hz]')
-    legend('right')
-    
+    for i = 1:length(condition)
+        subplot(2,2,i)
+        plot(freq,mean(condition{i},2))
+        %sgtitle('C3_left')
+        if(i==1)
+            ylabel('Power')
+        end
+        if(i==4)
+          xlabel('Frequency[Hz]')
+        end
+    end
 end

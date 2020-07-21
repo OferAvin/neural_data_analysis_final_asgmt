@@ -1,5 +1,6 @@
-function infoFreqBand = findInfoFreqBand(signal1,signal2,diff,freq)
+function infoFreqBand = findInfoFreqBand(signal1,signal2,threshold,freq)
     diffVec = signal1-signal2;
-    infoIndex = find(diffVec >= diff);
+    infoIndex = find(diffVec >= threshold);
+    infoFreqBand = freq(infoIndex);
     
 end

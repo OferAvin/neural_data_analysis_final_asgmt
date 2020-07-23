@@ -12,10 +12,8 @@ function plotSpectDiff(freq,time,condition,flag)
     end
     figure
     for i = 1:length(spectDiffCond)
-        subplot(length(spectDiffCond),1,i)
+        subplot(1,length(spectDiffCond),i)
         imagesc(time,freq,spectDiffCond{i})
-        colorbar;
-        caxis('auto');
         set(gca,'YDir','normal')
         colormap(jet);
         axis square
@@ -24,5 +22,9 @@ function plotSpectDiff(freq,time,condition,flag)
         if(i>1)
             xlabel ('Time [sec]');
         end
-    end     
+    end
+    cb = colorbar;
+    pos = [0.94,0.3,0.02,0.35];
+    set(cb,'units','Normalized','position',pos);
+    caxis('auto');
 end

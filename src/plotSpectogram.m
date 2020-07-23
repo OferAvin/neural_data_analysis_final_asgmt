@@ -3,8 +3,6 @@ function plotSpectogram(freq,time,condition,generalTitle)
     for i = 1:length(condition)
         subplot(2,2,i)
         imagesc(time,freq,condition{i})
-        colorbar;
-        caxis('auto');
         set(gca,'YDir','normal')
         colormap(jet);
         axis square
@@ -16,4 +14,8 @@ function plotSpectogram(freq,time,condition,generalTitle)
             xlabel ('Time [sec]');
         end
     end
+    cb = colorbar;
+    pos = [0.9,0.3,0.02,0.35];
+    set(cb,'units','Normalized','position',pos);
+    caxis('auto');
 end

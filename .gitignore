@@ -2,3 +2,7 @@
 /src/*.asv
 /*.doc*
 /Data/*
+/Tal/
+/Tal/*
+/Mor/
+/Mor/*

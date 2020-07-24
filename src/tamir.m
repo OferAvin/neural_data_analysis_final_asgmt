@@ -64,7 +64,6 @@ for i = 1:length(classes)
     end
 end
 
-generalTitle = {'C3LeftPwelch','C3RightPwelch','C4LeftPwelch','C4RightPwelch'};
 condition = {'LEFTc3','LEFTc4','RIGHTc3','RIGHTc4'};
 
 %visualization PWelch

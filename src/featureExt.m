@@ -1,4 +1,4 @@
-function featureExt(data, features)
+function featureMat =  featureExt(data, features)
     features = zeros(nTrails,nFeat);
     
 %     band power featurse

@@ -10,7 +10,8 @@ trialLen = size(P_C_S.data,2);
 timeVec = dt:dt:trialLen/fs;
 f = 0.5:0.1:40;
 window = 2;                                 %window length in secs                         
-windOverlap = 1.5;                          %window overlap length in secs                            
+windOverlap = 1.5;                          %window overlap length in secs
+numOfWindows = floor((size(P_C_S.data,2)-window*fs)/(window*fs-windOverlap*fs)+1); %number of windows
 miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
 
@@ -58,40 +59,34 @@ for i = 1:length(classes)
     for j = 1:length(Prmtr.chans)
         currClass = Prmtr.classes(i);
         chanCls = char(currClass + Prmtr.chansName(j));
-        Data.PWelch.(chanCls) = pwelch(Data.(chanCls)(:,(Prmtr.miPeriod*fs))',Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
+        Data.PWelch.(chanCls) = pwelch(Data.(chanCls)(:,(Prmtr.miPeriod*fs))',...
+            Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
     end
 end
 
 generalTitle = {'C3LeftPwelch','C3RightPwelch','C4LeftPwelch','C4RightPwelch'};
-condition = {'LEFTc3','LEFTc3','RIGHTc3','RIGHTc4'};
+condition = {'LEFTc3','LEFTc4','RIGHTc3','RIGHTc4'};
 
 %visualization PWelch
-plotPwelch(Data.PWelch,condition,f,generalTitle)
+plotPwelch(Data.PWelch,condition,f)
 comparePowerSpec(Data.PWelch,condition,f)
 
+% calculating spectrogram for all condition
 
-spect_left_C3 = zeros(size(leftC3,1),size(f,2),9); %9 num of col the spectrogram return according the pwelchWindow,pwelchOverlap
-spect_right_C3 = zeros(size(rightC3,1),size(f,2),9);
-spect_left_C4 = zeros(size(leftC4,1),size(f,2),9);
-spect_right_C4 = zeros(size(rightC4,1),size(f,2),9);
-trails = size(leftC3,1);
-for i = 1:trails
-    spect_left_C3(i,:,:) = spectrogram(leftC3(i,:),pwelchWindow,pwelchOverlap,f,fs,'yaxis');
-    spect_right_C3(i,:,:) = spectrogram(rightC3(i,:),pwelchWindow,pwelchOverlap,f,fs,'yaxis');
-    spect_left_C4(i,:,:) = spectrogram(leftC4(i,:),pwelchWindow,pwelchOverlap,f,fs,'yaxis');
-    spect_right_C4(i,:,:) = spectrogram(rightC4(i,:),pwelchWindow,pwelchOverlap,f,fs,'yaxis');
+for i =1:length(condition)
+   Data.spect.(condition{i}) = zeros(size(Data.(condition{i}),1),size(f,2),numOfWindows);
+   for j = 1:size(Data.(condition{i}),1)
+      Data.spect.(condition{i})(j,:,:) = spectrogram(Data.(condition{i})(j,:)',...
+          Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs,'yaxis');
+   end
+% convert the units to dB and average all spect for each cindition
+    Data.spect.(condition{i}) = squeeze(mean(10*log10(abs(Data.spect.(condition{i}))).^2));
 end
 
-% convert the units to dB and average of the spectograma
-spect_left_C3 = squeeze(mean(10*log10(abs(spect_left_C3)).^2));
-spect_left_C4 = squeeze(mean(10*log10(abs(spect_left_C4)).^2));
-spect_right_C3 = squeeze(mean(10*log10(abs(spect_right_C3)).^2));
-spect_right_C4 = squeeze(mean(10*log10(abs(spect_right_C4)).^2));
-
-spectCondition = {spect_left_C3,spect_left_C4,spect_right_C3,spect_right_C4};
-plotSpectogram(f,timeVec,spectCondition,generalTitle)
-plotSpectDiff(f,timeVec,spectCondition,1) 
-plotSpectDiff(f,timeVec,spectCondition,0) 
+%visualization spectogram
+plotSpectogram(Data.spect,condition,f,timeVec)
+plotSpectDiff(Data.spect,condition,f,timeVec,1)  
+plotSpectDiff(Data.spect,condition,f,timeVec,0) 
 
 
 

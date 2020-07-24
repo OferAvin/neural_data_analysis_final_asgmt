@@ -1,12 +1,14 @@
-function plotSpectogram(freq,time,condition,generalTitle)
+%this function plot the spctral power for each condition returned by
+%spectogram commend
+function plotSpectogram(data,condition,freq,time)
     figure
     for i = 1:length(condition)
         subplot(2,2,i)
-        imagesc(time,freq,condition{i})
+        imagesc(time,freq,data.(condition{i}))
         set(gca,'YDir','normal')
         colormap(jet);
         axis square
-        title(generalTitle{i});
+        title(condition{i});
         if(i==1)
             ylabel ('Frequency [Hz]');
         end

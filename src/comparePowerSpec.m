@@ -1,6 +1,7 @@
-%this function compare the chanle for each class
+%this function compare the chanle for each class for the PWelch results
 function comparePowerSpec(data,condition,f)
     figure
+    %sgtitle('Compare Power Spec')
     subplot(2,1,1)
     plot(f,mean(data.(condition{1}),2),'b')
     hold on

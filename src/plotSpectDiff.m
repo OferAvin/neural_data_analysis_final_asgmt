@@ -1,16 +1,19 @@
-function plotSpectDiff(freq,time,condition,flag)
+%this function compare the chanle or the class-depending on the user
+%selection by flag, from the spectogram results
+function plotSpectDiff(data,condition,freq,time,flag)
     if flag == 1
-        diff1 = condition{1}-condition{3};
-        diff2 = condition{2}-condition{4};
+        diff1 = data.(condition{1})-data.(condition{3});
+        diff2 = data.(condition{2})-data.(condition{4});
         spectDiffCond = {diff1,diff2};
         diffTitle = {'C3Diff','C4Diff'};
     else
-        diff1 = condition{1}-condition{2};
-        diff2 = condition{3}-condition{4};
+        diff1 = data.(condition{1})-data.(condition{2});
+        diff2 = data.(condition{3})-data.(condition{4});
         spectDiffCond = {diff1,diff2};
         diffTitle = {'left Diff','right Diff'};
     end
     figure
+    %sgtitle('Spectogram Diff')
     for i = 1:length(spectDiffCond)
         subplot(1,length(spectDiffCond),i)
         imagesc(time,freq,spectDiffCond{i})

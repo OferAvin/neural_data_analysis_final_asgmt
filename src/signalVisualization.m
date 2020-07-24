@@ -1,28 +1,31 @@
-function signalVisualization(data,lable,lableNum,row,col)
-   lable_index = find(lable(lableNum,:)==1);
-   index_trails = lable_index(randperm(length(lable_index),(row*col)));
+% this function plot a random co-responding trails for each chanle on the same plot 
+% the number of trails depend on the user selection
+% generic function for all classes
+function signalVisualization(data,indexClass,class,row,col)
+   index_trails = indexClass(randperm(length(indexClass),(row*col)));
    figure
-   if (lableNum==3)
-       sgtitle('left')
-   elseif(lableNum==4)
-       sgtitle('right')
-   end
+%    if (class=='LEFT')
+%        sgtitle('Left Imagery')
+%    elseif(class=='RIGHT')
+%        sgtitle('Right Imagery')
+%    end
    for i = 1:length(index_trails)
         subplot(row,col,i)
-        C3 = plot(data(index_trails(i),:,1)-data(index_trails(i),:,2),'r');
-%         hold on
-%         C4 = plot(data(index_trails(i),:,2),'b');
+        C3 = plot(data.allData(index_trails(i),:,1),'r');
+        hold on
+        C4 = plot(data.allData(index_trails(i),:,2),'b');
         ylim([-15,15])
-        if(i==20)
-            xlabel('Nsample');
+        if(i>=17)
+            xlabel('sample num');
         end
-        if(i==1)
-            ylabel('Mv');
+        toLable = [1,5,9,13,17];
+        if(ismember(i,toLable))
+            ylabel('Voltage[Mv]');
         end
    end
     hold on
-%     Leg = legend([C3,C4],{'C3','C4'});
-%     newUnits = 'normalized';
-%     set(Leg,'Position',[0.848091556210113 0.925793650793651 0.113690476190476 0.071031746031746],'Units', newUnits);
+    Leg = legend([C3,C4],{'C3','C4'});
+    newUnits = 'normalized';
+    set(Leg,'Position',[0.848091556210113 0.925793650793651 0.113690476190476 0.071031746031746],'Units', newUnits);
     
 end

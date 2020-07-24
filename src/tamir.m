@@ -20,48 +20,55 @@ chansName = ["c3" "c4"];                    %channels names should corresponds t
 classes = P_C_S.attributename(3:end);       %extract classes assuming rows 1,2 are artifact and remove 
 clasRow = cellfun(@(x) find(ismember(P_C_S.attributename,x)), classes, 'un',false); %extartct classes rows 
 
-
 Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),...
     'winOvlp', floor(windOverlap*fs),'miPeriod', miPeriod, 'classes', string(classes), ...
     'clasRow', cell2mat(clasRow), 'chans', str2num(cell2mat(chans)), 'chansName', chansName);
 
 %% Data
+Prmtr.condition = cell(1,4);
 Data.allData = P_C_S.data;
 for i = 1:length(classes)
     currClass = Prmtr.classes(i);
-    indexes = find(P_C_S.attribute(Prmtr.clasRow(i),:)==1);
+    Data.indexes.(classes{i}) = find(P_C_S.attribute(Prmtr.clasRow(i),:)==1);
     for j = 1:length(Prmtr.chans)
         chanCls = char(currClass + Prmtr.chansName(j));
-        Data.(chanCls) = Data.allData(indexes,:,Prmtr.chans(j));
+        Data.(chanCls) = Data.allData(Data.indexes.(classes{i}),:,Prmtr.chans(j));
     end
 end
 
 %% features
 %band power features 1st arr - time range, 2nd - band
-Features.bandPower{1} = {[3.5,6],[15,20]};
-Features.bandPower{2} = {[4,6],[32,36]};
-Features.bandPower{3} = {[5.5,6],[9,11]};
-Features.bandPower{4} = {[1.2,2.7],[17,21]};
+% Features.bandPower{1} = {[3.5,6],[15,20]};
+% Features.bandPower{2} = {[4,6],[32,36]};
+% Features.bandPower{3} = {[5.5,6],[9,11]};
+% Features.bandPower{4} = {[1.2,2.7],[17,21]};
 
 %% visualization
 %first visualization
 signalPerFig = 20; %signals per figuer 
 plotPerRow = 4;    %plots per row 
-%%
+plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
 
-signalVisualization(P_C_S.data,P_C_S.attribute,3,5,4)
-signalVisualization(P_C_S.data,P_C_S.attribute,4,5,4)
+%visualization rand trails
+for i = 1:length(classes)
+    signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+end
+% calculating PWelch for all condition
+for i = 1:length(classes)
+    for j = 1:length(Prmtr.chans)
+        currClass = Prmtr.classes(i);
+        chanCls = char(currClass + Prmtr.chansName(j));
+        Data.PWelch.(chanCls) = pwelch(Data.(chanCls)(:,(Prmtr.miPeriod*fs))',Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
+    end
+end
 
+generalTitle = {'C3LeftPwelch','C3RightPwelch','C4LeftPwelch','C4RightPwelch'};
+condition = {'LEFTc3','LEFTc3','RIGHTc3','RIGHTc4'};
 
-C3LeftPwelch = pwelch(leftC3(:,Prmtr.miPeriod)',Prmtr.winLen,Prmtr.winOvlp,Prmtr.f,Prmtr.fs);
-C3RightPwelch = pwelch(rightC3(:,Prmtr.miPeriod)',Prmtr.winLen,Prmtr.winOvlp,Prmtr.f,Prmtr.fs);
-C4LeftPwelch = pwelch(leftC4(:,Prmtr.miPeriod)',Prmtr.winLen,Prmtr.winOvlp,Prmtr.f,Prmtr.fs);
-C4RightPwelch = pwelch(rightC4(:,Prmtr.miPeriod)',Prmtr.winLen,Prmtr.winOvlp,Prmtr.f,Prmtr.fs);
+%visualization PWelch
+plotPwelch(Data.PWelch,condition,f,generalTitle)
+comparePowerSpec(Data.PWelch,condition,f)
 
-PwelchCond = {C3LeftPwelch,C3RightPwelch,C4LeftPwelch,C4RightPwelch};
-plotPwelch(PwelchCond,f,generalTitle)
-
-comparePowerSpec(C3LeftPwelch,C3RightPwelch,C4LeftPwelch,C4RightPwelch,f)
 
 spect_left_C3 = zeros(size(leftC3,1),size(f,2),9); %9 num of col the spectrogram return according the pwelchWindow,pwelchOverlap
 spect_right_C3 = zeros(size(rightC3,1),size(f,2),9);

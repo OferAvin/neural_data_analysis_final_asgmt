@@ -68,9 +68,9 @@ plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plo
 
 %%
 %visualization rand trails
-for i = 1:length(classes)
-%     signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
-end
+% for i = 1:length(classes)
+%      signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+% end
 % calculating PWelch for all condition
 for i = 1:length(classes)
     for j = 1:length(Prmtr.chans)
@@ -81,28 +81,26 @@ for i = 1:length(classes)
     end
 end
 
-condition = {'LEFTc3','LEFTc4','RIGHTc3','RIGHTc4'};
-
 %visualization PWelch
-% plotPwelch(Data.PWelch,condition,f)
-% comparePowerSpec(Data.PWelch,condition,f)
+% plotPwelch(Data.PWelch,Data.combLables,f)
+% comparePowerSpec(Data.PWelch,Data.combLables,f)
 
 % calculating spectrogram for all condition
 
-for i =1:length(condition)
-   Data.spect.(condition{i}) = zeros(size(Data.(condition{i}),1),size(f,2),numOfWindows);
-   for j = 1:size(Data.(condition{i}),1)
-      Data.spect.(condition{i})(j,:,:) = spectrogram(Data.(condition{i})(j,:)',...
+for i =1:length(Data.combLables)
+   Data.spect.(Data.combLables{i}) = zeros(size(Data.(Data.combLables{i}),1),size(f,2),numOfWindows);
+   for j = 1:size(Data.(Data.combLables{i}),1)
+      Data.spect.(Data.combLables{i})(j,:,:) = spectrogram(Data.(Data.combLables{i})(j,:)',...
           Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs,'yaxis');
    end
 % convert the units to dB and average all spect for each cindition
-    Data.spect.(condition{i}) = squeeze(mean(10*log10(abs(Data.spect.(condition{i}))).^2));
+    Data.spect.(Data.combLables{i}) = squeeze(mean(10*log10(abs(Data.spect.(Data.combLables{i}))).^2));
 end
 
 %visualization spectogram
-% plotSpectogram(Data.spect,condition,f,timeVec)
-% plotSpectDiff(Data.spect,condition,f,timeVec,1)  
-% plotSpectDiff(Data.spect,condition,f,timeVec,0) 
+% plotSpectogram(Data.spect,Data.combLables,f,timeVec)
+% plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
+% plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
 
 %% extracting features
 nFeat = (length(Features.bandPower))*nchans;
@@ -125,7 +123,7 @@ for i = 1:nchans
     end
 end
 
-%% amplitude features
+% amplitude features
 thrshld = 15;
 for i = 1:nchans
     %number of threshold passings
@@ -158,6 +156,8 @@ printAcc(trainAcc,0);
 
 
 
+
+plotPCA(featMat,3)
 
 
 

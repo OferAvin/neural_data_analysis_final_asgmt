@@ -1,6 +1,7 @@
+
+function plotSpectDiff(data,condition,freq,time,flag)
 %this function compare the chanle or the class-depending on the user
 %selection by flag, from the spectogram results
-function plotSpectDiff(data,condition,freq,time,flag)
     if flag == 1
         diff1 = data.(condition{1})-data.(condition{3});
         diff2 = data.(condition{2})-data.(condition{4});
@@ -22,7 +23,7 @@ function plotSpectDiff(data,condition,freq,time,flag)
         axis square
         title(diffTitle{i})
         ylabel ('Frequency [Hz]');
-        if(i>1)
+        if(i>=1)
             xlabel ('Time [sec]');
         end
     end

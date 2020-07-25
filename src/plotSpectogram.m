@@ -1,6 +1,7 @@
+
+function plotSpectogram(data,condition,freq,time)
 %this function plot the spctral power for each condition returned by
 %spectogram commend
-function plotSpectogram(data,condition,freq,time)
     figure
     for i = 1:length(condition)
         subplot(2,2,i)
@@ -9,7 +10,7 @@ function plotSpectogram(data,condition,freq,time)
         colormap(jet);
         axis square
         title(condition{i});
-        if(i==1)
+        if(i==1 || i==3)
             ylabel ('Frequency [Hz]');
         end
         if(i>2)

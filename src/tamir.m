@@ -55,6 +55,11 @@ Features.bandPower{4} = {[17,21],[1.2,2.7]};
 
 % Features.
 
+%% Model training
+k = 8;
+results = cell(k,1);
+trainErr = cell(k,1);
+acc = zeros(k,1);
 %% visualization
 %first visualization
 signalPerFig = 20; %signals per figuer 
@@ -135,21 +140,23 @@ for i = 1:nchans
 end
 
 
-%% k cross-validation
-order = mod(randperm(nTrials),k)+1;
-results = cell(k,1);
-trainErr = cell(k);
+%% training model with cross-validation
+idxSegments = mod(randperm(nTrials),k)+1;
+
 for i = 1:k
-    testSet = logical(order == i)';
-    trainSet = logical(order ~= i)';
-    [results{i},trainErr{i}] = classify(featMat(testSet,:),featMat(trainSet,:),Data.lables(trainSet));
-    acc{i} = results{i} == Data.lables(testSet);
+    testSet = logical(idxSegments == i)';
+    trainSet = logical(idxSegments ~= i)';
+    [results{i},trainErr{i}] = classify(featMat(testSet,:),featMat(trainSet,:),Data.lables(trainSet),'linear');
+    acc(i) = sum(results{i} == Data.lables(testSet));
+    acc(i) = acc(i)/length(results{i})*100;
 end
 
-for i = 1:length(acc)
-    a(i) = sum(acc{1})/length(acc{1});
-end
-    b = mean(a);
+avg = mean(
+
+
+
+
+
 
 
 

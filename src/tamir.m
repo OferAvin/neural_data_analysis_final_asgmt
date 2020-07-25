@@ -26,7 +26,7 @@ Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),
     'clasRow', cell2mat(clasRow), 'chans', str2num(cell2mat(chans)), 'chansName', chansName);
 
 %% Data
-Prmtr.condition = cell(1,4);
+
 Data.allData = P_C_S.data;
 for i = 1:length(classes)
     currClass = Prmtr.classes(i);

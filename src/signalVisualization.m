@@ -1,7 +1,7 @@
+function signalVisualization(data,indexClass,class,row,col)
 % this function plot a random co-responding trails for each chanle on the same plot 
 % the number of trails depend on the user selection
 % generic function for all classes
-function signalVisualization(data,indexClass,class,row,col)
    index_trails = indexClass(randperm(length(indexClass),(row*col)));
    figure
 %    if (class=='LEFT')

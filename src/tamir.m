@@ -6,6 +6,7 @@ close all
 load('motor_imagery_train_data.mat');
 fs = P_C_S.samplingfrequency;               %sampling frequency, Hz
 dt = 1/fs;                                  %time step [sec]
+nTrials = size(P_C_S.data,1);     
 trialLen = size(P_C_S.data,2);     
 timeVec = dt:dt:trialLen/fs;
 f = 0.5:0.1:40;
@@ -17,9 +18,11 @@ miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
 
 chans = P_C_S.channelname(1:2);             %channels in use
 chansName = ["c3" "c4"];                    %channels names should corresponds to chans 
+nchans = length(chans);
 
 classes = P_C_S.attributename(3:end);       %extract classes assuming rows 1,2 are artifact and remove 
 clasRow = cellfun(@(x) find(ismember(P_C_S.attributename,x)), classes, 'un',false); %extartct classes rows 
+nclass = length(classes);
 
 Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),...
     'winOvlp', floor(windOverlap*fs),'miPeriod', miPeriod, 'classes', string(classes), ...
@@ -28,21 +31,29 @@ Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),
 %% Data
 
 Data.allData = P_C_S.data;
+Data.combLables = cell(1,nchans*nclass);            %lables for channels*class combinations
+Data.lables = strings(1,nTrials);
+k = 1;
 for i = 1:length(classes)
     currClass = Prmtr.classes(i);
     Data.indexes.(classes{i}) = find(P_C_S.attribute(Prmtr.clasRow(i),:)==1);
+    Data.lables(Data.indexes.(classes{i})) = currClass;
     for j = 1:length(Prmtr.chans)
         chanCls = char(currClass + Prmtr.chansName(j));
         Data.(chanCls) = Data.allData(Data.indexes.(classes{i}),:,Prmtr.chans(j));
+        Data.combLables{1,k} = chanCls;
+        k = k+1;
     end
 end
 
 %% features
-%band power features 1st arr - time range, 2nd - band
-% Features.bandPower{1} = {[3.5,6],[15,20]};
-% Features.bandPower{2} = {[4,6],[32,36]};
-% Features.bandPower{3} = {[5.5,6],[9,11]};
-% Features.bandPower{4} = {[1.2,2.7],[17,21]};
+%band power features 1st arr - band, 2nd arr - time range
+Features.bandPower{1} = {[15,20],[3.5,6]};
+Features.bandPower{2} = {[32,36],[4,6]};
+Features.bandPower{3} = {[9,11],[5.5,6]};
+Features.bandPower{4} = {[17,21],[1.2,2.7]};
+
+% Features.
 
 %% visualization
 %first visualization
@@ -50,9 +61,10 @@ signalPerFig = 20; %signals per figuer
 plotPerRow = 4;    %plots per row 
 plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
 
+%%
 %visualization rand trails
 for i = 1:length(classes)
-    signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+%     signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
 end
 % calculating PWelch for all condition
 for i = 1:length(classes)
@@ -67,8 +79,8 @@ end
 condition = {'LEFTc3','LEFTc4','RIGHTc3','RIGHTc4'};
 
 %visualization PWelch
-plotPwelch(Data.PWelch,condition,f)
-comparePowerSpec(Data.PWelch,condition,f)
+% plotPwelch(Data.PWelch,condition,f)
+% comparePowerSpec(Data.PWelch,condition,f)
 
 % calculating spectrogram for all condition
 
@@ -83,12 +95,42 @@ for i =1:length(condition)
 end
 
 %visualization spectogram
-plotSpectogram(Data.spect,condition,f,timeVec)
-plotSpectDiff(Data.spect,condition,f,timeVec,1)  
-plotSpectDiff(Data.spect,condition,f,timeVec,0) 
+% plotSpectogram(Data.spect,condition,f,timeVec)
+% plotSpectDiff(Data.spect,condition,f,timeVec,1)  
+% plotSpectDiff(Data.spect,condition,f,timeVec,0) 
+
+%% extracting features
+nFeat = (length(Features.bandPower))*nchans;
+featMat = zeros(nTrials,nFeat);
+    fIdx = 1;
+for i = 1:nchans
+    for j = 1:length(Features.bandPower)
+        
+        tRange = (Prmtr.time >= Features.bandPower{j}{2}(1) & ...
+            Prmtr.time <= Features.bandPower{j}{2}(2));
+        %raw bandpower
+        featMat(:,fIdx) = ...
+            (bandpower(Data.allData(:,tRange,i)',fs,Features.bandPower{j}{1}))';
+        fIdx = fIdx + 1;
+        %relative bandpower
+        totalBP = bandpower(Data.allData(:,tRange,i)')';
+        featMat(:,fIdx) = featMat(:,fIdx-1)./totalBP;
+        fIdx = fIdx + 1;
+        
+    end
+end
 
 
-
+%% k cross-validation
+order = mod(randperm(nTrials),k);
+results = cell(k);
+trainErr = cell(k);
+for i = 1:k
+    testSet = logical(order == i-1)';
+    trainSet = logical(order ~= i-1)';
+    [results{i},trainErr{i}] = classify(featMat(testSet,:),featMat(trainSet,:),Data.lables(trainSet));
+    acc = results{i} == Data.lables(testSet)';
+end
 
 
 

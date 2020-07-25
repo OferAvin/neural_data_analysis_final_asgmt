@@ -151,7 +151,7 @@ for i = 1:k
     acc(i) = acc(i)/length(results{i})*100;
 end
 
-avg = mean(
+% avg = mean(
 
 
 

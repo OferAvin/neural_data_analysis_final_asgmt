@@ -32,7 +32,7 @@ Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),
 Prmtr.condition = cell(1,4);
 Data.allData = P_C_S.data;
 Data.combLables = cell(1,nchans*nclass);            %lables for channels*class combinations
-Data.lables = strings(1,nTrials);
+Data.lables = strings(nTrials,1);
 k = 1;
 for i = 1:length(classes)
     currClass = Prmtr.classes(i);
@@ -122,16 +122,20 @@ end
 
 
 %% k cross-validation
-order = mod(randperm(nTrials),k);
-results = cell(k);
+order = mod(randperm(nTrials),k)+1;
+results = cell(k,1);
 trainErr = cell(k);
 for i = 1:k
-    testSet = logical(order == i-1)';
-    trainSet = logical(order ~= i-1)';
+    testSet = logical(order == i)';
+    trainSet = logical(order ~= i)';
     [results{i},trainErr{i}] = classify(featMat(testSet,:),featMat(trainSet,:),Data.lables(trainSet));
-    acc = results{i} == Data.lables(testSet)';
+    acc{i} = results{i} == Data.lables(testSet);
 end
 
+for i = 1:length(acc)
+    a(i) = sum(acc{1})/length(acc{1});
+end
+    b = mean(a);
 
 
 

@@ -22,7 +22,7 @@ function plotSpectDiff(data,condition,freq,time,flag)
         axis square
         title(diffTitle{i})
         ylabel ('Frequency [Hz]');
-        if(i>1)
+        if(i>=1)
             xlabel ('Time [sec]');
         end
     end

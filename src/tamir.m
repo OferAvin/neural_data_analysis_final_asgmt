@@ -56,7 +56,7 @@ Features.bandPower{4} = {[17,21],[1.2,2.7]};
 % Features.
 
 %% Model training
-k = 8;
+k = 9;
 results = cell(k,1);
 trainErr = cell(k,1);
 acc = zeros(k,1);
@@ -151,7 +151,10 @@ for i = 1:k
     acc(i) = acc(i)/length(results{i})*100;
 end
 
-% avg = mean(
+printAcc(acc,1);
+
+trainAcc = (1-cell2mat(trainErr))*100;
+printAcc(trainAcc,0);
 
 
 

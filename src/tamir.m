@@ -120,6 +120,20 @@ for i = 1:nchans
     end
 end
 
+%% amplitude features
+thrshld = 15;
+for i = 1:nchans
+    %number of threshold passings
+    % max mV
+    for j = 1:nTrials
+        ThPassVec = Data.allData(j,:,i) >= thrshld;
+        maxV = max(Data.allData(j,:,i));
+        featMat(j,fIdx) = sum(abs(diff(ThPassVec)));
+        featMat(j,fIdx+1) = maxV;
+    end
+    fIdx = fIdx + 2;
+end
+
 
 %% k cross-validation
 order = mod(randperm(nTrials),k);

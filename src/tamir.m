@@ -29,7 +29,7 @@ Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),
     'clasRow', cell2mat(clasRow), 'chans', str2num(cell2mat(chans)), 'chansName', chansName);
 
 %% Data
-Prmtr.condition = cell(1,4);
+
 Data.allData = P_C_S.data;
 Data.combLables = cell(1,nchans*nclass);            %lables for channels*class combinations
 Data.lables = strings(nTrials,1);
@@ -118,6 +118,20 @@ for i = 1:nchans
         fIdx = fIdx + 1;
         
     end
+end
+
+%% amplitude features
+thrshld = 15;
+for i = 1:nchans
+    %number of threshold passings
+    % max mV
+    for j = 1:nTrials
+        ThPassVec = Data.allData(j,:,i) >= thrshld;
+        maxV = max(Data.allData(j,:,i));
+        featMat(j,fIdx) = sum(abs(diff(ThPassVec)));
+        featMat(j,fIdx+1) = maxV;
+    end
+    fIdx = fIdx + 2;
 end
 
 

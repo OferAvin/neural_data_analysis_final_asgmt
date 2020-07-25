@@ -1,5 +1,6 @@
-%this function compare the chanle for each class for the PWelch results
+
 function comparePowerSpec(data,condition,f)
+%this function compare the chanle for each class for the PWelch results
     figure
     %sgtitle('Compare Power Spec')
     subplot(2,1,1)
@@ -7,7 +8,7 @@ function comparePowerSpec(data,condition,f)
     hold on
     plot(f,mean(data.(condition{3}),2),'r')
     title('Power Spectrom diff C3')
-    ylabel('Spectrom Power')
+    ylabel('Power Spectrom')
     legend('left','right')
 
     subplot(2,1,2)
@@ -16,5 +17,5 @@ function comparePowerSpec(data,condition,f)
     plot(f,mean(data.(condition{4}),2),'r')
     title('Power Spectrom diff C4')
     xlabel('Frequency[Hz]')
-    ylabel('Spectrom Power')
+    ylabel('Power Spectrom')
 end

@@ -63,9 +63,9 @@ plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plo
 
 %%
 %visualization rand trails
-for i = 1:length(classes)
-%     signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
-end
+% for i = 1:length(classes)
+%      signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+% end
 % calculating PWelch for all condition
 for i = 1:length(classes)
     for j = 1:length(Prmtr.chans)
@@ -76,28 +76,26 @@ for i = 1:length(classes)
     end
 end
 
-combLables = {'LEFTc3','LEFTc4','RIGHTc3','RIGHTc4'};
-
 %visualization PWelch
-plotPwelch(Data.PWelch,Data.combLables,f)
-comparePowerSpec(Data.PWelch,Data.combLables,f)
+% plotPwelch(Data.PWelch,Data.combLables,f)
+% comparePowerSpec(Data.PWelch,Data.combLables,f)
 
 % calculating spectrogram for all condition
 
 for i =1:length(Data.combLables)
-   Data.spect.(Data.combLables{i}) = zeros(size(Data.(combLables{i}),1),size(f,2),numOfWindows);
-   for j = 1:size(Data.(combLables{i}),1)
-      Data.spect.(combLables{i})(j,:,:) = spectrogram(Data.(combLables{i})(j,:)',...
+   Data.spect.(Data.combLables{i}) = zeros(size(Data.(Data.combLables{i}),1),size(f,2),numOfWindows);
+   for j = 1:size(Data.(Data.combLables{i}),1)
+      Data.spect.(Data.combLables{i})(j,:,:) = spectrogram(Data.(Data.combLables{i})(j,:)',...
           Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs,'yaxis');
    end
 % convert the units to dB and average all spect for each cindition
-    Data.spect.(combLables{i}) = squeeze(mean(10*log10(abs(Data.spect.(combLables{i}))).^2));
+    Data.spect.(Data.combLables{i}) = squeeze(mean(10*log10(abs(Data.spect.(Data.combLables{i}))).^2));
 end
 
 %visualization spectogram
-plotSpectogram(Data.spect,Data.combLables,f,timeVec)
-plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
-plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
+% plotSpectogram(Data.spect,Data.combLables,f,timeVec)
+% plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
+% plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
 
 %% extracting features
 nFeat = (length(Features.bandPower))*nchans;
@@ -145,6 +143,8 @@ for i = 1:k
     [results{i},trainErr{i}] = classify(featMat(testSet,:),featMat(trainSet,:),Data.lables(trainSet));
     acc = results{i} == Data.lables(testSet)';
 end
+
+plotPCA(featMat,3)
 
 
 

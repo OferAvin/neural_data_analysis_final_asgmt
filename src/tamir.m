@@ -22,7 +22,7 @@ nchans = length(chans);
 
 classes = P_C_S.attributename(3:end);       %extract classes assuming rows 1,2 are artifact and remove 
 clasRow = cellfun(@(x) find(ismember(P_C_S.attributename,x)), classes, 'un',false); %extartct classes rows 
-nclass = length(classes);
+nclass = length(classes); 
 
 Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),...
     'winOvlp', floor(windOverlap*fs),'miPeriod', miPeriod, 'classes', string(classes), ...
@@ -157,7 +157,7 @@ printAcc(trainAcc,0);
 
 
 
-plotPCA(featMat,3)
+plotPCA(featMat,Data)
 
 
 

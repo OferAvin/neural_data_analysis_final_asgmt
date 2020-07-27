@@ -53,18 +53,25 @@ Features.bandPower{2} = {[32,36],[4,6]};
 Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
 
-% Features.
+%mV threshold feature
+Features.mVthrshld = 15;
 
+Features.nFeat = (length(Features.bandPower)*2+2)*nchans; %bandpower and relative bandpower
+% + threshold passed + max mV for each channel
 %% Model training
-k = 9;
+k = 8;
 results = cell(k,1);
 trainErr = cell(k,1);
 acc = zeros(k,1);
+
 %% visualization
 %first visualization
-signalPerFig = 20; %signals per figuer 
-plotPerRow = 4;    %plots per row 
+signalPerFig = 20;  %signals per figuer 
+plotPerRow = 4;     %plots per row 
 plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
+
+%histogram
+xLim = [-4 4];      %x axis lims in sd 
 
 %%
 %visualization rand trails
@@ -85,7 +92,7 @@ end
 % plotPwelch(Data.PWelch,Data.combLables,f)
 % comparePowerSpec(Data.PWelch,Data.combLables,f)
 
-% calculating spectrogram for all condition
+% calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
    Data.spect.(Data.combLables{i}) = zeros(size(Data.(Data.combLables{i}),1),size(f,2),numOfWindows);
@@ -103,9 +110,11 @@ end
 % plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
 
 %% extracting features
-nFeat = (length(Features.bandPower))*nchans;
-featMat = zeros(nTrials,nFeat);
-    fIdx = 1;
+
+featMat = zeros(nTrials,Features.nFeat);
+fIdx = 1;
+featLables = cell(1,Features.nFeat);
+
 for i = 1:nchans
     for j = 1:length(Features.bandPower)
         
@@ -114,32 +123,49 @@ for i = 1:nchans
         %raw bandpower
         featMat(:,fIdx) = ...
             (bandpower(Data.allData(:,tRange,i)',fs,Features.bandPower{j}{1}))';
+        featLables{fIdx} ={"bandpower" ,Features.bandPower{fIdx-fIdx+1}};
         fIdx = fIdx + 1;
         %relative bandpower
         totalBP = bandpower(Data.allData(:,tRange,i)')';
         featMat(:,fIdx) = featMat(:,fIdx-1)./totalBP;
+        featLables{fIdx} ={"relative bandpower" ,Features.bandPower{fIdx-fIdx+1}};
         fIdx = fIdx + 1;
         
     end
 end
 
-% amplitude features
-thrshld = 15;
+% mV threshold feature features
 for i = 1:nchans
     %number of threshold passings
     % max mV
     for j = 1:nTrials
-        ThPassVec = Data.allData(j,:,i) >= thrshld;
+        ThPassVec = Data.allData(j,:,i) >= Features.mVthrshld;
         maxV = max(Data.allData(j,:,i));
         featMat(j,fIdx) = sum(abs(diff(ThPassVec)));
         featMat(j,fIdx+1) = maxV;
     end
     fIdx = fIdx + 2;
 end
+%%
+featMat = zscore(featMat);
+%% histogram
+for i = 1:size(featMat,2)
+    figure(i);
+    for j = 1:length(classes)
+        hist{j} = histogram(featMat(Data.indexes.(classes{j}),i));
+        binWid(j) = hist{j}.BinWidth;
+        hold on;
+        alpha(0.5);
+    end
+    minWid = min(binWid);
+    cellfun(@(x) edditBinWD(x,minWid), hist,'un', false);
+    xlim(xLim);
+    hold off;
+end
 
-
-%% training model with cross-validation
+%% k fold cross-validation
 idxSegments = mod(randperm(nTrials),k)+1;
+cmT = zeros(nclass,nclass);
 
 for i = 1:k
     testSet = logical(idxSegments == i)';
@@ -147,15 +173,16 @@ for i = 1:k
     [results{i},trainErr{i}] = classify(featMat(testSet,:),featMat(trainSet,:),Data.lables(trainSet),'linear');
     acc(i) = sum(results{i} == Data.lables(testSet));
     acc(i) = acc(i)/length(results{i})*100;
+    
+    cm = confusionmat(Data.lables(testSet),results{i});
+    cmT = cmT + cm;
 end
 
 printAcc(acc,1);
-
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
 
-
-
+confusionchart(cmT,["l" "r"]);
 
 plotPCA(featMat,3)
 

@@ -1,12 +1,13 @@
-function printAcc(score,isTest)
+function printAcc(score,isValden)
 % this function gets scores vector for each fold and if the scores belongs
-% to the test set, calculating mean and SD and print it.
+% to the validation set, calculating mean and SD and print it.
 %     - score must be a numeric vector
-%     - isTest must logical value, True - test set, False - train set
+%     - isValden must be logical value, True - validation set,
+%       False - train set
     AccAvg = mean(score);
     AccSD = std(score);
-    if isTest
-        set = "test";
+    if isValden
+        set = "validation";
     else
         set = "train";
     end

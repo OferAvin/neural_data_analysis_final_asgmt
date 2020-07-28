@@ -56,7 +56,8 @@ Features.bandPower{4} = {[17,21],[1.2,2.7]};
 % Features.
 
 %% Model training
-k = 9;
+k = 8;
+num2reduce = 16;
 results = cell(k,1);
 trainErr = cell(k,1);
 acc = zeros(k,1);
@@ -107,8 +108,7 @@ nFeat = (length(Features.bandPower))*nchans;
 featMat = zeros(nTrials,nFeat);
     fIdx = 1;
 for i = 1:nchans
-    for j = 1:length(Features.bandPower)
-        
+    for j = 1:length(Features.bandPower)   
         tRange = (Prmtr.time >= Features.bandPower{j}{2}(1) & ...
             Prmtr.time <= Features.bandPower{j}{2}(2));
         %raw bandpower
@@ -128,14 +128,26 @@ thrshld = 15;
 for i = 1:nchans
     %number of threshold passings
     % max mV
+    % min mV
+    % diff C4 - C3
     for j = 1:nTrials
         ThPassVec = Data.allData(j,:,i) >= thrshld;
         maxV = max(Data.allData(j,:,i));
+        minV = min(Data.allData(j,:,i)); 
+        diffAmpSum = sum(Data.allData(j,(Prmtr.miPeriod*fs),2)-Data.allData(j,(Prmtr.miPeriod*fs),1));
         featMat(j,fIdx) = sum(abs(diff(ThPassVec)));
         featMat(j,fIdx+1) = maxV;
+        featMat(j,fIdx+2) = minV;
+        featMat(j,fIdx+3) = diffAmpSum;
     end
-    fIdx = fIdx + 2;
+    fIdx = fIdx + 4;
 end
+
+%% feature selection
+[featIdx,selectMat] = selectFeat(featMat,Data.lables,num2reduce);
+[~,colind] = rref(selectMat);       % check for linearly dependent col and remove them
+selectMat = selectMat(:, colind); 
+
 
 
 %% training model with cross-validation
@@ -144,7 +156,7 @@ idxSegments = mod(randperm(nTrials),k)+1;
 for i = 1:k
     testSet = logical(idxSegments == i)';
     trainSet = logical(idxSegments ~= i)';
-    [results{i},trainErr{i}] = classify(featMat(testSet,:),featMat(trainSet,:),Data.lables(trainSet),'linear');
+    [results{i},trainErr{i}] = classify(selectMat(testSet,:),selectMat(trainSet,:),Data.lables(trainSet),'linear');
     acc(i) = sum(results{i} == Data.lables(testSet));
     acc(i) = acc(i)/length(results{i})*100;
 end
@@ -155,9 +167,7 @@ trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
 
 
-
-
-plotPCA(featMat,Data)
+%plotPCA(featMat,Data)
 
 
 

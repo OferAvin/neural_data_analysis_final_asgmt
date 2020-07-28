@@ -1,4 +1,5 @@
 function plotPCA(featMet,data)
+
 %     N = size(featMet,1);       %trails num
 %     Cov = featMet*featMet'./(N-1);  %covarience matrix
 %     [EV,~] = eigs(Cov,3);

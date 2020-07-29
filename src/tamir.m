@@ -73,7 +73,8 @@ plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plo
 
 %histogram
 xLim = [-4 4];      %x axis lims in sd 
-
+minBinWid = 0.3;
+alph = 0.5;
 %%
 %visualization rand trails
 % for i = 1:length(classes)
@@ -123,12 +124,12 @@ for i = 1:nchans
         %raw bandpower
         featMat(:,fIdx) = ...
             (bandpower(Data.allData(:,tRange,i)',fs,Features.bandPower{j}{1}))';
-        featLables{fIdx} ={"bandpower" ,Features.bandPower{fIdx-fIdx+1}};
+        featLables{fIdx} ="Bandpower";
         fIdx = fIdx + 1;
         %relative bandpower
         totalBP = bandpower(Data.allData(:,tRange,i)')';
         featMat(:,fIdx) = featMat(:,fIdx-1)./totalBP;
-        featLables{fIdx} ={"relative bandpower" ,Features.bandPower{fIdx-fIdx+1}};
+        featLables{fIdx} = "Relative Bandpower";
         fIdx = fIdx + 1;
         
     end
@@ -152,26 +153,32 @@ for i = 1:nchans
     end
     fIdx = fIdx + 4;
 end
-%%
-featMat = zscore(featMat);
 %% histogram
+featMat = zscore(featMat);
+hist = cell(1,nclass);
+binWid = zeros(1,nclass);
+
 for i = 1:size(featMat,2)
+    ttl = char(featLables{i});
     figure(i);
     for j = 1:length(classes)
         hist{j} = histogram(featMat(Data.indexes.(classes{j}),i));
         binWid(j) = hist{j}.BinWidth;
         hold on;
-        alpha(0.5);
+        alpha(alph);
     end
-    minWid = min(binWid);
-    cellfun(@(x) edditBinWD(x,minWid), hist,'un', false);
+    minWid = max(min(binWid),minBinWid);
+    cellfun(@(x) setfield(x,'BinWidth',minWid), hist,'un', false);
+    cellfun(@(x) setfield(x,'BinCounts',x.BinCounts/nTrials), hist,'un', false); %normelize count  
     xlim(xLim);
+    sgtitle(ttl);
+    
     hold off;
 end
 
 
 %% feature selection
-[featIdx,selectMat] = selectFeat(featMat,Data.lables,num2reduce);
+[featIdx,selectMat] = selectFeat(featMat,Data.lables,numFeatSlect);
 [~,colind] = rref(selectMat);       % check for linearly dependent col and remove them
 selectMat = selectMat(:, colind); 
 
@@ -201,7 +208,7 @@ printAcc(trainAcc,0);
 
 
 
-confusionchart(cmT,["l" "r"]);
+confusionchart(cmT,["left" "right"]);
 
 plotPCA(featMat,Data)
 

@@ -133,19 +133,26 @@ for i = 1:nchans
     %total power and root total power    
     power = sum(PW);
     featMat(:,fIdx) = power';
+    featLables{fIdx} = {"Total Power"};
     RTP = sqrt(power);
     featMat(:,fIdx+1) = RTP';
+    featLables{fIdx+1} = {"Root Total Power"};
     %Spectral fit
     [slope,intercept] = specSlopeInter(PW,f);
     featMat(:,fIdx+2) = slope;
+    featLables{fIdx+2} = {"slope"};
     featMat(:,fIdx+3) = real(log(intercept)); %return the intercept scale
+    featLables{fIdx+3} = {"intercept"};
     probability = PW./power;    %normalize the power by the total power so it can be treated as a probability
     %spectralMoment
     featMat(:,fIdx+4) = (f*probability)';
+    featLables{fIdx+4} = {"Spectral Moment"};
     %Spectral entropy
     featMat(:,fIdx+5) = (-sum(probability .* log2(probability),1))';
+    featLables{fIdx+5} = {"Spectral Entropy"};
     %Spectral edge
     featMat(:,fIdx+6) = (spectralEdge(probability,f,edgePrct))';
+    featLables{fIdx+6} = {"Spectral Edge"};
     fIdx = fIdx + 7;
     % mV threshold features
     for j = 1:nTrials
@@ -162,6 +169,10 @@ for i = 1:nchans
         diffAmpSum = sum(Data.allData(j,(Prmtr.miPeriod*fs),2)-Data.allData(j,(Prmtr.miPeriod*fs),1));
         featMat(j,fIdx+3) = diffAmpSum;
     end
+    featLables{fIdx} = {"Threshold Pass N",Features.mVthrshld};
+    featLables{fIdx+1} = {"Max mV"};
+    featLables{fIdx+2} = {"Min mV"};
+    featLables{fIdx+3} = {"diff C4 - C3"};
     fIdx = fIdx + 4; 
 end
 featMat = zscore(featMat);

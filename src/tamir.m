@@ -10,8 +10,8 @@ nTrials = size(P_C_S.data,1);
 trialLen = size(P_C_S.data,2);     
 timeVec = dt:dt:trialLen/fs;
 f = 0.5:0.1:40;
-window = 2;                                 %window length in secs                         
-windOverlap = 1.5;                          %window overlap length in secs
+window = 1.5;                                 %window length in secs                         
+windOverlap = 1.3;                          %window overlap length in secs
 numOfWindows = floor((size(P_C_S.data,2)-window*fs)/(window*fs-windOverlap*fs)+1); %number of windows
 miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
@@ -60,25 +60,30 @@ Features.mVthrshld = 15;
 Features.nFeat = (length(Features.bandPower)*2+2)*nchans; %bandpower and relative bandpower
 % + threshold passed + max mV for each channel
 %% Model training
-k = 8;
+
+k = 8;              %k fold parameter
 numFeatSlect = 16;
 results = cell(k,1);
 trainErr = cell(k,1);
 acc = zeros(k,1);
 
 %% visualization
+globalPos = [0.2,0.15,0.6,0.7]; %global position for figures
+globTtlPos = [0.45,0.999];      %global title position
+
 %first visualization
 signalPerFig = 20;  %signals per figuer 
 plotPerRow = 4;     %plots per row 
 plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
+
 %histogram
 xLim = [-4 4];      %x axis lims in sd 
 minBinWid = 0.3;
-alph = 0.5;
+trnsp = 0.5;        %bars transparency 
 %%
 %visualization rand trails
 for i = 1:length(classes)
-     signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+%      signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
 end
 % calculating PWelch for all condition
 for i = 1:length(classes)
@@ -91,7 +96,7 @@ for i = 1:length(classes)
 end
 
 %visualization PWelch
-plotPwelch(Data.PWelch,Data.combLables,Prmtr)
+% plotPwelch(Data.PWelch,Data.combLables,Prmtr)
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
@@ -105,8 +110,8 @@ for i =1:length(Data.combLables)
 end
 
 %visualization spectogram
- plotSpectogram(Data.spect,Data.combLables,f,timeVec)
- plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
+%  plotSpectogram(Data.spect,Data.combLables,f,timeVec)
+%  plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
 % plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
 
 %% extracting features
@@ -121,13 +126,13 @@ for i = 1:nchans
         %raw bandpower
         featMat(:,fIdx) = ...
             (bandpower(Data.allData(:,tRange,i)',fs,Features.bandPower{j}{1}))';
-        featLables{fIdx} =char("Bandpower - "+Prmtr.chansName(i)+" "+...
+        featLables{fIdx} =char("Bandpower - "+Prmtr.chansName(i)+newline+...
             Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
         fIdx = fIdx + 1;
         %relative bandpower
         totalBP = bandpower(Data.allData(:,tRange,i)')';
         featMat(:,fIdx) = featMat(:,fIdx-1)./totalBP;
-        featLables{fIdx} = char("Relative Bandpower - "+Prmtr.chansName(i)+" "+...
+        featLables{fIdx} = char("Relative Bandpower - "+Prmtr.chansName(i)+newline+...
             Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
         fIdx = fIdx + 1;
     end
@@ -186,22 +191,21 @@ binWid = zeros(1,nclass);
 
 for i = 1:size(featMat,2)
     ttl = char(featLables{i});
-    figure();
+    figure('Units','normalized','Position',globalPos);
+    hold on;
     for j = 1:length(classes)
         hist{j} = histogram(featMat(Data.indexes.(classes{j}),i));
         binWid(j) = hist{j}.BinWidth;
         hold on;
-        alpha(alph);
+        alpha(trnsp);
     end
     minWid = max(min(binWid),minBinWid);
     cellfun(@(x) setfield(x,'BinWidth',minWid), hist,'un', false);
     cellfun(@(x) setfield(x,'BinCounts',x.BinCounts/nTrials), hist,'un', false); %normelize count  
     xlim(xLim);
-    sgtitle(ttl);
-    
+    title(ttl, 'Units','normalized','Position', globTtlPos);
     hold off;
 end
-
 
 featMat = zscore(featMat);
 
@@ -233,9 +237,6 @@ end
 printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
-
-
-
 
 
 confusionchart(cmT,["left" "right"]);

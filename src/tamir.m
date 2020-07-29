@@ -121,12 +121,14 @@ for i = 1:nchans
         %raw bandpower
         featMat(:,fIdx) = ...
             (bandpower(Data.allData(:,tRange,i)',fs,Features.bandPower{j}{1}))';
-        featLables{fIdx} ="Bandpower";
+        featLables{fIdx} =char("Bandpower - "+Prmtr.chansName(i)+" "+...
+            Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
         fIdx = fIdx + 1;
         %relative bandpower
         totalBP = bandpower(Data.allData(:,tRange,i)')';
         featMat(:,fIdx) = featMat(:,fIdx-1)./totalBP;
-        featLables{fIdx} = "Relative Bandpower";
+        featLables{fIdx} = char("Relative Bandpower - "+Prmtr.chansName(i)+" "+...
+            Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
         fIdx = fIdx + 1;
     end
     PW = pwelch(Data.allData(:,(Prmtr.miPeriod*fs),i)',...

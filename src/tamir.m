@@ -15,6 +15,7 @@ windOverlap = 1.5;                          %window overlap length in secs
 numOfWindows = floor((size(P_C_S.data,2)-window*fs)/(window*fs-windOverlap*fs)+1); %number of windows
 miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
+edgePrct = 90;                              %spectral edge percentaile
 
 chans = P_C_S.channelname(1:2);             %channels in use
 chansName = ["c3" "c4"];                    %channels names should corresponds to chans 
@@ -70,16 +71,15 @@ acc = zeros(k,1);
 signalPerFig = 20;  %signals per figuer 
 plotPerRow = 4;     %plots per row 
 plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
-
 %histogram
 xLim = [-4 4];      %x axis lims in sd 
 minBinWid = 0.3;
 alph = 0.5;
 %%
 %visualization rand trails
-% for i = 1:length(classes)
-%      signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
-% end
+for i = 1:length(classes)
+     signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+end
 % calculating PWelch for all condition
 for i = 1:length(classes)
     for j = 1:length(Prmtr.chans)
@@ -91,9 +91,7 @@ for i = 1:length(classes)
 end
 
 %visualization PWelch
-% plotPwelch(Data.PWelch,Data.combLables,f)
-% comparePowerSpec(Data.PWelch,Data.combLables,f)
-
+plotPwelch(Data.PWelch,Data.combLables,Prmtr)
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
@@ -107,12 +105,11 @@ for i =1:length(Data.combLables)
 end
 
 %visualization spectogram
-% plotSpectogram(Data.spect,Data.combLables,f,timeVec)
-% plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
+ plotSpectogram(Data.spect,Data.combLables,f,timeVec)
+ plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
 % plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
 
 %% extracting features
-
 featMat = zeros(nTrials,Features.nFeat);
 fIdx = 1;
 featLables = cell(1,Features.nFeat);
@@ -131,28 +128,55 @@ for i = 1:nchans
         featMat(:,fIdx) = featMat(:,fIdx-1)./totalBP;
         featLables{fIdx} = "Relative Bandpower";
         fIdx = fIdx + 1;
-        
     end
-end
-
-% mV threshold feature features
-for i = 1:nchans
-    %number of threshold passings
-    % max mV
-    % min mV
-    % diff C4 - C3
+    PW = pwelch(Data.allData(:,(Prmtr.miPeriod*fs),i)',...
+            Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
+    %total power and root total power    
+    power = sum(PW);
+    featMat(:,fIdx) = power';
+    featLables{fIdx} = "Total Power";
+    RTP = sqrt(power);
+    featMat(:,fIdx+1) = RTP';
+    featLables{fIdx+1} = "Root Total Power";
+    %Spectral fit
+    [slope,intercept] = specSlopeInter(PW,f);
+    featMat(:,fIdx+2) = slope;
+    featLables{fIdx+2} = "slope";
+    featMat(:,fIdx+3) = real(log(intercept)); %return the intercept scale
+    featLables{fIdx+3} = "intercept";
+    probability = PW./power;    %normalize the power by the total power so it can be treated as a probability
+    %spectralMoment
+    featMat(:,fIdx+4) = (f*probability)';
+    featLables{fIdx+4} = "Spectral Moment";
+    %Spectral entropy
+    featMat(:,fIdx+5) = (-sum(probability .* log2(probability),1))';
+    featLables{fIdx+5} = "Spectral Entropy";
+    %Spectral edge
+    featMat(:,fIdx+6) = (spectralEdge(probability,f,edgePrct))';
+    featLables{fIdx+6} = "Spectral Edge";
+    fIdx = fIdx + 7;
+    % mV threshold features
     for j = 1:nTrials
+        %number of threshold passings
         ThPassVec = Data.allData(j,:,i) >= Features.mVthrshld;
-        maxV = max(Data.allData(j,:,i));
-        minV = min(Data.allData(j,:,i)); 
-        diffAmpSum = sum(Data.allData(j,(Prmtr.miPeriod*fs),2)-Data.allData(j,(Prmtr.miPeriod*fs),1));
         featMat(j,fIdx) = sum(abs(diff(ThPassVec)));
+        % max mV
+        maxV = max(Data.allData(j,:,i));
         featMat(j,fIdx+1) = maxV;
+        % min mV
+        minV = min(Data.allData(j,:,i));
         featMat(j,fIdx+2) = minV;
+        % diff C4 - C3
+        diffAmpSum = sum(Data.allData(j,(Prmtr.miPeriod*fs),2)-Data.allData(j,(Prmtr.miPeriod*fs),1));
         featMat(j,fIdx+3) = diffAmpSum;
     end
-    fIdx = fIdx + 4;
+    featLables{fIdx} = char("Threshold Pass count - "+Features.mVthrshld+"mV");
+    featLables{fIdx+1} = "Max mV";
+    featLables{fIdx+2} = "Min mV";
+    featLables{fIdx+3} = "diff C4 - C3";
+    fIdx = fIdx + 4; 
 end
+
 %% histogram
 featMat = zscore(featMat);
 hist = cell(1,nclass);
@@ -160,7 +184,7 @@ binWid = zeros(1,nclass);
 
 for i = 1:size(featMat,2)
     ttl = char(featLables{i});
-    figure(i);
+    figure();
     for j = 1:length(classes)
         hist{j} = histogram(featMat(Data.indexes.(classes{j}),i));
         binWid(j) = hist{j}.BinWidth;
@@ -177,12 +201,15 @@ for i = 1:size(featMat,2)
 end
 
 
+featMat = zscore(featMat);
+
+
 %% feature selection
-[featIdx,selectMat] = selectFeat(featMat,Data.lables,numFeatSlect);
-[~,colind] = rref(selectMat);       % check for linearly dependent col and remove them
-selectMat = selectMat(:, colind); 
-
-
+ [featIdx,selectMat] = selectFeat(featMat,Data.lables,numFeatSlect);
+ [~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
+% [~,colind] = rref(featMat);
+% featMat = featMat(:, colind); 
+ selectMat = selectMat(:, colind); 
 
 
 %% k fold cross-validation
@@ -204,6 +231,7 @@ end
 printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
+
 
 
 

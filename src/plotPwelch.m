@@ -1,11 +1,12 @@
 
-function plotPwelch(data,condition,freq)
-%this function plot the mean spctral power for each condition returned by pwelch commend
+function plotPwelch(data,condition,prmtr)
+%this function plot the mean spctral power by freq for each condition returned by pwelch commend
+%condition - all combination for the exp condition
     figure
-    %sgtitle('PWelch')
+    %sgtitle('Power Spect by PWelch')
     for i = 1:length(condition)
         subplot(2,2,i)
-        plot(freq,mean(data.(condition{i}),2))
+        plot(prmtr.freq,mean(data.(condition{i}),2))
         title(condition{i});hold on
         if(i==1 || i==3)
             ylabel('Power Spectrom')
@@ -15,4 +16,5 @@ function plotPwelch(data,condition,freq)
         end
     end
     hold off
+    comparePowerSpec(data,condition,prmtr)
 end

@@ -3,6 +3,7 @@ function plotSpectogram(data,condition,freq,time)
 %this function plot the spctral power for each condition returned by
 %spectogram commend
     figure
+    %sgtitle('Power Spectogram');
     for i = 1:length(condition)
         subplot(2,2,i)
         imagesc(time,freq,data.(condition{i}))

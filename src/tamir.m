@@ -55,7 +55,7 @@ for i = 1:nclass
 end
 
 %% features
-Features.nFeatSelect = 10 ;
+Features.nFeatSelect = 16 ;
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
@@ -91,7 +91,7 @@ Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
 %%
 %visualization rand trails
 for i = 1:length(classes)
-%      signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+%       signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
 end
 % calculating PWelch for all condition
 for i = 1:length(classes)
@@ -104,7 +104,7 @@ for i = 1:length(classes)
 end
 
 %visualization PWelch
-% plotPwelch(Data.PWelch,Data.combLables,Prmtr)
+%  plotPwelch(Data.PWelch,Data.combLables,Prmtr)
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
@@ -118,9 +118,9 @@ for i =1:length(Data.combLables)
 end
 
 %visualization spectogram
-%  plotSpectogram(Data.spect,Data.combLables,f,timeVec)
-%  plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
-% plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
+% plotSpectogram(Data.spect,Data.combLables,f,timeVec)
+% plotSpectDiff(Data.spect,Data.combLables,f,timeVec)  
+ 
 
 %% extracting features
 Features.featMat = zeros(nTrials,Features.nFeat);
@@ -130,15 +130,14 @@ Features = extractFeatures(Data,Prmtr,Features,fIdx);
 Features.featMat = zscore(Features.featMat);
 
 %% histogram
-mkFeaturesHist(Prmtr,Features,Data);
+% mkFeaturesHist(Prmtr,Features,Data);
 
 %% feature selection
- [featIdx,selectMat] = selectFeat(Features.featMat,Data.lables,numFeatSlect);
+ [featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges);
  [~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
-% [~,colind] = rref(featMat);
-% featMat = featMat(:, colind); 
+% [~,colind] = rref(Features.featMat);
+% Features.featMat = Features.featMat(:, colind); 
  selectMat = selectMat(:, colind); 
-
 
 %% k fold cross-validation
 
@@ -159,9 +158,9 @@ end
 printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
-confusionchart(cmT,[classes(1) classes(2)]);
+%confusionchart(cmT,[classes(1) classes(2)]);
 
-plotPCA(Features.featMat,Data)
+% plotPCA(Features.featMat,Data)
 
 
 

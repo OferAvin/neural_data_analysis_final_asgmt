@@ -19,6 +19,8 @@ function plotSpectogram(data,condition,freq,time)
         end
     end
     cb = colorbar;
+    cb.Label.String = 'Power diff [dB]';
+    cb.FontSize = 10;
     pos = [0.9,0.3,0.02,0.35];
     set(cb,'units','Normalized','position',pos);
     caxis('auto');

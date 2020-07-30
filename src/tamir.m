@@ -35,7 +35,8 @@ Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(
     'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
     'chans',chans,'chansName',chansName,'edgePrct',edgePrct);
 
-flag = 1;
+flag = 1; % to check the best num of features to select
+% flag = 0; % use Features.nFeatSelect pram for the features selection
 %% Data
 Data.allData = P_C_S.data;
 Data.combLables = cell(1,nchans*nclass);            %lables for channels*class combinations
@@ -90,7 +91,7 @@ Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
 %%
 %visualization rand trails
 for i = 1:length(classes)
-      signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+      signalVisualization(Data,i,Prmtr)
 end
 % calculating PWelch for all condition
 for i = 1:length(classes)
@@ -103,7 +104,7 @@ for i = 1:length(classes)
 end
 
 %visualization PWelch
- plotPwelch(Data.PWelch,Data.combLables,Prmtr)
+ plotPwelch(Data,Prmtr)
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
@@ -117,8 +118,8 @@ for i =1:length(Data.combLables)
 end
 
 %visualization spectogram
-plotSpectogram(Data.spect,Data.combLables,f,timeVec)
-plotSpectDiff(Data.spect,Data.combLables,f,timeVec)  
+plotSpectogram(Data,Prmtr)
+plotSpectDiff(Data,Prmtr)  
  
 
 %% extracting features

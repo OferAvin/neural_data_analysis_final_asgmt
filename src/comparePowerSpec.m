@@ -1,18 +1,18 @@
 
-function comparePowerSpec(data,condition,prmtr)
+function comparePowerSpec(Data,Prmtr)
 %this function compare the chanle for each class for the PWelch results
     figure
     %sgtitle('Compare Power Spec by chanle')
-    for i =1:length(prmtr.chansName)
+    for i =1:length(Prmtr.chansName)
         subplot(2,1,i)
-        plot(prmtr.freq,mean(data.(condition{i}),2),'b')
+        plot(Prmtr.freq,mean(Data.PWelch.(Data.combLables{i}),2),'b')
         hold on
-        plot(prmtr.freq,mean(data.(condition{i+2}),2),'r')
-        title(strcat('Power Spectrom diff',{'  '}', (prmtr.chansName{i})))
+        plot(Prmtr.freq,mean(Data.PWelch.(Data.combLables{i+2}),2),'r')
+        title(strcat('Power Spectrom diff',{'  '}', (Prmtr.chansName{i})))
         ylabel('Power Spectrom')
         if(i>1)
             xlabel('Frequency[Hz]')
         end
-        legend(prmtr.classes{1},prmtr.classes{2})
+        legend(Prmtr.classes{1},Prmtr.classes{2})
     end
 end

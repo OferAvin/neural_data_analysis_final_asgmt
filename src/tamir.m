@@ -160,7 +160,7 @@ printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
 
-%confusionchart(cmT,[classes(1) classes(2)]);
+% confusionchart(cmT,[classes(1) classes(2)]);
 plotPCA(Features.featMat,Data)
 
 

@@ -55,7 +55,8 @@ for i = 1:nclass
 end
 
 %% features
-Features.nFeatSelect = 16 ;
+Features.nFeatSelect = 10 ;     %number of features to select for classification
+
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};

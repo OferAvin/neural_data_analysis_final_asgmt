@@ -10,25 +10,31 @@ nTrials = size(P_C_S.data,1);
 trialLen = size(P_C_S.data,2);     
 timeVec = dt:dt:trialLen/fs;
 f = 0.5:0.1:40;
-window = 2;                                 %window length in secs                         
-windOverlap = 1.5;                          %window overlap length in secs
+window = 1.5;                                 %window length in secs                         
+windOverlap = 1.3;                          %window overlap length in secs
 numOfWindows = floor((size(P_C_S.data,2)-window*fs)/(window*fs-windOverlap*fs)+1); %number of windows
 miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
 edgePrct = 90;                              %spectral edge percentaile
 
-chans = P_C_S.channelname(1:2);             %channels in use
+chans = cell2mat(P_C_S.channelname(1:2));   %channels in use
+chans = str2num(chans);
 chansName = ["c3" "c4"];                    %channels names should corresponds to chans 
 nchans = length(chans);
 
+nclass = 2;                                 %this project support two classes only
 classes = P_C_S.attributename(3:end);       %extract classes assuming rows 1,2 are artifact and remove 
+classes = string(classes);
 clasRow = cellfun(@(x) find(ismember(P_C_S.attributename,x)), classes, 'un',false); %extartct classes rows 
-nclass = length(classes); 
+ntrialsPerClass = [sum(P_C_S.attribute(clasRow{1},:)==1),...
+    sum(P_C_S.attribute(clasRow{2},:)==1)];
 
-Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),...
-    'winOvlp', floor(windOverlap*fs),'miPeriod', miPeriod, 'classes', string(classes), ...
-    'clasRow', cell2mat(clasRow), 'chans', str2num(cell2mat(chans)), 'chansName', chansName,...
-    'nTrail',nTrials,'edgePrct',edgePrct);
+
+Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(window*fs),...
+    'winOvlp',floor(windOverlap*fs),'miPeriod',miPeriod,'nclass',nclass,'classes',classes, ...
+    'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
+    'chans',chans,'chansName',chansName,'edgePrct',edgePrct);
+
 
 %% Data
 
@@ -36,62 +42,69 @@ Data.allData = P_C_S.data;
 Data.combLables = cell(1,nchans*nclass);            %lables for channels*class combinations
 Data.lables = strings(nTrials,1);
 k = 1;
-for i = 1:length(classes)
-    currClass = Prmtr.classes(i);
+for i = 1:nclass
+    currClass = classes(i);
     Data.indexes.(classes{i}) = find(P_C_S.attribute(Prmtr.clasRow(i),:)==1);
     Data.lables(Data.indexes.(classes{i})) = currClass;
-    for j = 1:length(Prmtr.chans)
-        chanCls = char(currClass + Prmtr.chansName(j));
-        Data.(chanCls) = Data.allData(Data.indexes.(classes{i}),:,Prmtr.chans(j));
+    for j = 1:nchans
+        chanCls = char(currClass + chansName(j));
+        Data.(chanCls) = Data.allData(Data.indexes.(classes{i}),:,chans(j));
         Data.combLables{1,k} = chanCls;
         k = k+1;
     end
 end
 
 %% features
+Features.nFeatSelect = 10 ;
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
 Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
-
 %mV threshold feature
 Features.mVthrshld = 15;
-
 Features.nFeat = (length(Features.bandPower)*2+2)*nchans; %bandpower and relative bandpower
-% + threshold passed + max mV for each channel
+%feature selection method
+Features.sfMethod = "ks" ;%choose between cna  and ks
 %% Model training
-k = 8;
-numFeatSlect = 16;
+k = 8;              %k fold parameter
 results = cell(k,1);
 trainErr = cell(k,1);
 acc = zeros(k,1);
 
 %% visualization
+globalPos = [0.2,0.15,0.6,0.7]; %global position for figures
+globTtlPos = [0.45,0.999];      %global title position
 %first visualization
 signalPerFig = 20;  %signals per figuer 
 plotPerRow = 4;     %plots per row 
 plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
 %histogram
 xLim = [-4 4];      %x axis lims in sd 
+binWid = 0.2;
+trnsp = 0.5;        %bars transparency
+binEdges = xLim(1):binWid:xLim(2);
 
+Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
+    'signalPerFig',signalPerFig,'plotPerRow',plotPerRow,'plotPerCol',plotPerCol,...
+    'xLim',xLim,'binEdges',binEdges,'trnsp',trnsp);
 %%
 %visualization rand trails
 for i = 1:length(classes)
-     signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+%      signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
 end
 % calculating PWelch for all condition
 for i = 1:length(classes)
     for j = 1:length(Prmtr.chans)
         currClass = Prmtr.classes(i);
-        chanCls = char(currClass + Prmtr.chansName(j));
+        chanCls = char(currClass + chansName(j));
         Data.PWelch.(chanCls) = pwelch(Data.(chanCls)(:,(Prmtr.miPeriod*fs))',...
             Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
     end
 end
 
 %visualization PWelch
-plotPwelch(Data.PWelch,Data.combLables,Prmtr)
+% plotPwelch(Data.PWelch,Data.combLables,Prmtr)
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
@@ -105,8 +118,8 @@ for i =1:length(Data.combLables)
 end
 
 %visualization spectogram
- plotSpectogram(Data.spect,Data.combLables,f,timeVec)
- plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
+%  plotSpectogram(Data.spect,Data.combLables,f,timeVec)
+%  plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
 % plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
 
 %% extracting features
@@ -115,27 +128,16 @@ fIdx = 1;
 Features.featLables = cell(1,Features.nFeat);
 Features = extractFeatures(Data,Prmtr,Features,fIdx);
 Features.featMat = zscore(Features.featMat);
-%% histogram
-% for i = 1:size(featMat,2)
-%     figure(i);
-%     for j = 1:length(classes)
-%         hist{j} = histogram(featMat(Data.indexes.(classes{j}),i));
-%         binWid(j) = hist{j}.BinWidth;
-%         hold on;
-%         alpha(0.5);
-%     end
-%     minWid = min(binWid);
-%     cellfun(@(x) edditBinWD(x,minWid), hist,'un', false);
-%     xlim(xLim);
-%     hold off;
-% end
 
+%% histogram
+mkFeaturesHist(Prmtr,Features,Data);
 %% feature selection
- [featIdx,selectMat] = selectFeat(Features.featMat,Data.lables,numFeatSlect);
- [~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
-% [~,colind] = rref(featMat);
-% featMat = featMat(:, colind); 
+[featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges);
+[~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
+% [~,colind] = rref(Features.featMat);
+% Features.featMat = Features.featMat(:, colind); 
  selectMat = selectMat(:, colind); 
+
 
 %% k fold cross-validation
 
@@ -156,7 +158,9 @@ end
 printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
-%confusionchart(cmT,["l" "r"]);
+confusionchart(cmT,[classes(1) classes(2)]);
+
+
 plotPCA(Features.featMat,Data)
 
 

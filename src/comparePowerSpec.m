@@ -13,7 +13,6 @@ function comparePowerSpec(data,condition,prmtr)
         if(i>1)
             xlabel('Frequency[Hz]')
         end
-        legend('left','right')
+        legend(prmtr.classes{1},prmtr.classes{2})
     end
-
 end

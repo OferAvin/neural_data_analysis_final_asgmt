@@ -27,7 +27,8 @@ nclass = length(classes);
 
 Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),...
     'winOvlp', floor(windOverlap*fs),'miPeriod', miPeriod, 'classes', string(classes), ...
-    'clasRow', cell2mat(clasRow), 'chans', str2num(cell2mat(chans)), 'chansName', chansName);
+    'clasRow', cell2mat(clasRow), 'chans', str2num(cell2mat(chans)), 'chansName', chansName,...
+    'nTrail',nTrials,'edgePrct',edgePrct);
 
 %% Data
 
@@ -109,73 +110,11 @@ end
 % plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
 
 %% extracting features
-featMat = zeros(nTrials,Features.nFeat);
+Features.featMat = zeros(nTrials,Features.nFeat);
 fIdx = 1;
-featLables = cell(1,Features.nFeat);
-
-for i = 1:nchans
-    for j = 1:length(Features.bandPower)   
-        tRange = (Prmtr.time >= Features.bandPower{j}{2}(1) & ...
-            Prmtr.time <= Features.bandPower{j}{2}(2));
-        %raw bandpower
-        featMat(:,fIdx) = ...
-            (bandpower(Data.allData(:,tRange,i)',fs,Features.bandPower{j}{1}))';
-        featLables{fIdx} ={"bandpower" ,Features.bandPower{fIdx-fIdx+1}};
-        fIdx = fIdx + 1;
-        %relative bandpower
-        totalBP = bandpower(Data.allData(:,tRange,i)')';
-        featMat(:,fIdx) = featMat(:,fIdx-1)./totalBP;
-        featLables{fIdx} ={"relative bandpower" ,Features.bandPower{fIdx-fIdx+1}};
-        fIdx = fIdx + 1;
-    end
-    PW = pwelch(Data.allData(:,(Prmtr.miPeriod*fs),i)',...
-            Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
-    %total power and root total power    
-    power = sum(PW);
-    featMat(:,fIdx) = power';
-    featLables{fIdx} = {"Total Power"};
-    RTP = sqrt(power);
-    featMat(:,fIdx+1) = RTP';
-    featLables{fIdx+1} = {"Root Total Power"};
-    %Spectral fit
-    [slope,intercept] = specSlopeInter(PW,f);
-    featMat(:,fIdx+2) = slope;
-    featLables{fIdx+2} = {"slope"};
-    featMat(:,fIdx+3) = real(log(intercept)); %return the intercept scale
-    featLables{fIdx+3} = {"intercept"};
-    probability = PW./power;    %normalize the power by the total power so it can be treated as a probability
-    %spectralMoment
-    featMat(:,fIdx+4) = (f*probability)';
-    featLables{fIdx+4} = {"Spectral Moment"};
-    %Spectral entropy
-    featMat(:,fIdx+5) = (-sum(probability .* log2(probability),1))';
-    featLables{fIdx+5} = {"Spectral Entropy"};
-    %Spectral edge
-    featMat(:,fIdx+6) = (spectralEdge(probability,f,edgePrct))';
-    featLables{fIdx+6} = {"Spectral Edge"};
-    fIdx = fIdx + 7;
-    % mV threshold features
-    for j = 1:nTrials
-        %number of threshold passings
-        ThPassVec = Data.allData(j,:,i) >= Features.mVthrshld;
-        featMat(j,fIdx) = sum(abs(diff(ThPassVec)));
-        % max mV
-        maxV = max(Data.allData(j,:,i));
-        featMat(j,fIdx+1) = maxV;
-        % min mV
-        minV = min(Data.allData(j,:,i));
-        featMat(j,fIdx+2) = minV;
-        % diff C4 - C3
-        diffAmpSum = sum(Data.allData(j,(Prmtr.miPeriod*fs),2)-Data.allData(j,(Prmtr.miPeriod*fs),1));
-        featMat(j,fIdx+3) = diffAmpSum;
-    end
-    featLables{fIdx} = {"Threshold Pass N",Features.mVthrshld};
-    featLables{fIdx+1} = {"Max mV"};
-    featLables{fIdx+2} = {"Min mV"};
-    featLables{fIdx+3} = {"diff C4 - C3"};
-    fIdx = fIdx + 4; 
-end
-featMat = zscore(featMat);
+Features.featLables = cell(1,Features.nFeat);
+Features = extractFeatures(Data,Prmtr,Features,fIdx);
+Features.featMat = zscore(Features.featMat);
 %% histogram
 % for i = 1:size(featMat,2)
 %     figure(i);
@@ -192,7 +131,7 @@ featMat = zscore(featMat);
 % end
 
 %% feature selection
- [featIdx,selectMat] = selectFeat(featMat,Data.lables,numFeatSlect);
+ [featIdx,selectMat] = selectFeat(Features.featMat,Data.lables,numFeatSlect);
  [~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
 % [~,colind] = rref(featMat);
 % featMat = featMat(:, colind); 
@@ -218,7 +157,7 @@ printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
 %confusionchart(cmT,["l" "r"]);
-plotPCA(featMat,Data)
+plotPCA(Features.featMat,Data)
 
 
 

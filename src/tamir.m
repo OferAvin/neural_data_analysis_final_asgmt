@@ -29,17 +29,11 @@ clasRow = cellfun(@(x) find(ismember(P_C_S.attributename,x)), classes, 'un',fals
 ntrialsPerClass = [sum(P_C_S.attribute(clasRow{1},:)==1),...
     sum(P_C_S.attribute(clasRow{2},:)==1)];
 
-<<<<<<< HEAD
-Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),...
-    'winOvlp', floor(windOverlap*fs),'miPeriod', miPeriod, 'classes', string(classes), ...
-    'clasRow', cell2mat(clasRow), 'chans', str2num(cell2mat(chans)), 'chansName', chansName,...
-    'nTrail',nTrials,'edgePrct',edgePrct);
-=======
 Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(window*fs),...
     'winOvlp',floor(windOverlap*fs),'miPeriod',miPeriod,'nclass',nclass,'classes',classes, ...
     'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
-    'chans',chans,'chansName',chansName);
->>>>>>> f9bb9cd644446574008a8a08724fea1ddb12a45c
+    'chans',chans,'chansName',chansName,'edgePrct',edgePrct);
+
 
 %% Data
 
@@ -149,13 +143,13 @@ Features.featMat = zscore(Features.featMat);
 % end
 
 %% histogram
-mkFeaturesHist(Prmtr,Features,Data);
+%mkFeaturesHist(Prmtr,Features,Data);
 %% feature selection
- [featIdx,selectMat] = selectFeat(Features.featMat,Data.lables,numFeatSlect);
- [~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
-% [~,colind] = rref(featMat);
-% featMat = featMat(:, colind); 
- selectMat = selectMat(:, colind); 
+% [featIdx,selectMat] = selectFeat(Features.featMat,Data.lables,Features.nFeatSelect);
+ %[~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
+ [~,colind] = rref(Features.featMat);
+ Features.featMat = Features.featMat(:, colind); 
+ %selectMat = selectMat(:, colind); 
 
 
 %% k fold cross-validation

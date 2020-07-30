@@ -91,7 +91,7 @@ Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
 %%
 %visualization rand trails
 for i = 1:length(classes)
-      signalVisualization(Data,i,Prmtr)
+%       signalVisualization(Data,i,Prmtr)
 end
 % calculating PWelch for all condition
 for i = 1:length(classes)
@@ -104,7 +104,7 @@ for i = 1:length(classes)
 end
 
 %visualization PWelch
- plotPwelch(Data,Prmtr)
+%  plotPwelch(Data,Prmtr)
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
@@ -118,8 +118,8 @@ for i =1:length(Data.combLables)
 end
 
 %visualization spectogram
-plotSpectogram(Data,Prmtr)
-plotSpectDiff(Data,Prmtr)  
+% plotSpectogram(Data,Prmtr)
+% plotSpectDiff(Data,Prmtr)  
  
 
 %% extracting features
@@ -130,7 +130,7 @@ Features = extractFeatures(Data,Prmtr,Features,fIdx);
 Features.featMat = zscore(Features.featMat);
 
 %% histogram
-mkFeaturesHist(Prmtr,Features,Data);
+% mkFeaturesHist(Prmtr,Features,Data);
 
 %% feature selection
 if flag == 1

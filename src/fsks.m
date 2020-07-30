@@ -1,4 +1,5 @@
 function p = fsks(features,lables,distPrecision)
+
     catVec = categorical(lables);
     cat = categories(catVec);
     celFeat1 = num2cell(features(catVec == cat{1},:),1);    %only 1st class trails

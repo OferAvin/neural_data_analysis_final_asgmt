@@ -54,7 +54,7 @@ for i = 1:nclass
 end
 
 %% features
-Features.nFeatSelect = 10 ;
+Features.nFeatSelect = 14 ;
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
@@ -62,11 +62,11 @@ Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
 %mV threshold feature
 Features.mVthrshld = 15;
-Features.nFeat = (length(Features.bandPower)*2+2)*nchans; %bandpower and relative bandpower
+Features.nFeat = (length(Features.bandPower)*2+2)*nchans;   %bandpower and relative bandpower
 %feature selection method
-Features.sfMethod = "ks" ;%choose between cna  and ks
+Features.sfMethod = "ks" ;       %choose between cna  and ks
 %% Model training
-k = 8;              %k fold parameter
+k = 5;              %k fold parameter
 results = cell(k,1);
 trainErr = cell(k,1);
 acc = zeros(k,1);
@@ -80,7 +80,7 @@ plotPerRow = 4;     %plots per row
 plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
 %histogram
 xLim = [-4 4];      %x axis lims in sd 
-binWid = 0.2;
+binWid = 0.1;
 trnsp = 0.5;        %bars transparency
 binEdges = xLim(1):binWid:xLim(2);
 
@@ -144,6 +144,7 @@ Features.featMat = zscore(Features.featMat);
 
 %% histogram
 %mkFeaturesHist(Prmtr,Features,Data);
+
 %% feature selection
 % [featIdx,selectMat] = selectFeat(Features.featMat,Data.lables,Features.nFeatSelect);
  %[~,colind] = rref(selectMat);       % check for lineary dependent col and remove them

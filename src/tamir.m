@@ -104,8 +104,9 @@ for i = 1:length(classes)
     end
 end
 
-%visualization PWelch
-%  plotPwelch(Data.PWelch,Data.combLables,Prmtr)
+% visualization PWelch
+ plotPwelch(Data.PWelch,Data.combLables,Prmtr)
+ 
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)

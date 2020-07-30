@@ -133,7 +133,7 @@ Features.featMat = zscore(Features.featMat);
 mkFeaturesHist(Prmtr,Features,Data);
 
 %% feature selection
- [featIdx,selectMat] = selectFeat(Features.featMat,Data.lables,numFeatSlect);
+ [featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges);
  [~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
 % [~,colind] = rref(featMat);
 % featMat = featMat(:, colind); 

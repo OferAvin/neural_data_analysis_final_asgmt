@@ -17,17 +17,22 @@ miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
 edgePrct = 90;                              %spectral edge percentaile
 
-chans = P_C_S.channelname(1:2);             %channels in use
+chans = cell2mat(P_C_S.channelname(1:2));   %channels in use
+chans = str2num(chans);
 chansName = ["c3" "c4"];                    %channels names should corresponds to chans 
 nchans = length(chans);
 
+nclass = 2;                                 %this project support two classes only
 classes = P_C_S.attributename(3:end);       %extract classes assuming rows 1,2 are artifact and remove 
+classes = string(classes);
 clasRow = cellfun(@(x) find(ismember(P_C_S.attributename,x)), classes, 'un',false); %extartct classes rows 
-nclass = length(classes); 
+ntrialsPerClass = [sum(P_C_S.attribute(clasRow{1},:)==1),...
+    sum(P_C_S.attribute(clasRow{2},:)==1)];
 
-Prmtr = struct('fs', fs, 'time', timeVec, 'freq', f, 'winLen', floor(window*fs),...
-    'winOvlp', floor(windOverlap*fs),'miPeriod', miPeriod, 'classes', string(classes), ...
-    'clasRow', cell2mat(clasRow), 'chans', str2num(cell2mat(chans)), 'chansName', chansName);
+Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(window*fs),...
+    'winOvlp',floor(windOverlap*fs),'miPeriod',miPeriod,'nclass',nclass,'classes',classes, ...
+    'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
+    'chans',chans,'chansName',chansName);
 
 %% Data
 
@@ -35,34 +40,32 @@ Data.allData = P_C_S.data;
 Data.combLables = cell(1,nchans*nclass);            %lables for channels*class combinations
 Data.lables = strings(nTrials,1);
 k = 1;
-for i = 1:length(classes)
-    currClass = Prmtr.classes(i);
+for i = 1:nclass
+    currClass = classes(i);
     Data.indexes.(classes{i}) = find(P_C_S.attribute(Prmtr.clasRow(i),:)==1);
     Data.lables(Data.indexes.(classes{i})) = currClass;
-    for j = 1:length(Prmtr.chans)
-        chanCls = char(currClass + Prmtr.chansName(j));
-        Data.(chanCls) = Data.allData(Data.indexes.(classes{i}),:,Prmtr.chans(j));
+    for j = 1:nchans
+        chanCls = char(currClass + chansName(j));
+        Data.(chanCls) = Data.allData(Data.indexes.(classes{i}),:,chans(j));
         Data.combLables{1,k} = chanCls;
         k = k+1;
     end
 end
 
 %% features
+Features.nFeatSelect = 10 ;
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
 Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
-
 %mV threshold feature
 Features.mVthrshld = 15;
-
 Features.nFeat = (length(Features.bandPower)*2+2)*nchans; %bandpower and relative bandpower
-% + threshold passed + max mV for each channel
+%feature selection method
+Features.sfMethod = "ks" ;%choose between cna  and ks
 %% Model training
-
 k = 8;              %k fold parameter
-numFeatSlect = 16;
 results = cell(k,1);
 trainErr = cell(k,1);
 acc = zeros(k,1);
@@ -70,16 +73,19 @@ acc = zeros(k,1);
 %% visualization
 globalPos = [0.2,0.15,0.6,0.7]; %global position for figures
 globTtlPos = [0.45,0.999];      %global title position
-
 %first visualization
 signalPerFig = 20;  %signals per figuer 
 plotPerRow = 4;     %plots per row 
 plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
-
 %histogram
 xLim = [-4 4];      %x axis lims in sd 
-minBinWid = 0.3;
-trnsp = 0.5;        %bars transparency 
+binWid = 0.2;
+trnsp = 0.5;        %bars transparency
+binEdges = xLim(1):binWid:xLim(2);
+
+Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
+    'signalPerFig',signalPerFig,'plotPerRow',plotPerRow,'plotPerCol',plotPerCol,...
+    'xLim',xLim,'binEdges',binEdges,'trnsp',trnsp);
 %%
 %visualization rand trails
 for i = 1:length(classes)
@@ -89,7 +95,7 @@ end
 for i = 1:length(classes)
     for j = 1:length(Prmtr.chans)
         currClass = Prmtr.classes(i);
-        chanCls = char(currClass + Prmtr.chansName(j));
+        chanCls = char(currClass + chansName(j));
         Data.PWelch.(chanCls) = pwelch(Data.(chanCls)(:,(Prmtr.miPeriod*fs))',...
             Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
     end
@@ -115,24 +121,24 @@ end
 % plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
 
 %% extracting features
-featMat = zeros(nTrials,Features.nFeat);
+Features.featMat = zeros(nTrials,Features.nFeat);
 fIdx = 1;
-featLables = cell(1,Features.nFeat);
+Features.featLables = cell(1,Features.nFeat);
 
 for i = 1:nchans
     for j = 1:length(Features.bandPower)   
         tRange = (Prmtr.time >= Features.bandPower{j}{2}(1) & ...
             Prmtr.time <= Features.bandPower{j}{2}(2));
         %raw bandpower
-        featMat(:,fIdx) = ...
+        Features.featMat(:,fIdx) = ...
             (bandpower(Data.allData(:,tRange,i)',fs,Features.bandPower{j}{1}))';
-        featLables{fIdx} =char("Bandpower - "+Prmtr.chansName(i)+newline+...
+        Features.featLables{fIdx} =char("Bandpower - "+Prmtr.chansName(i)+newline+...
             Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
         fIdx = fIdx + 1;
         %relative bandpower
         totalBP = bandpower(Data.allData(:,tRange,i)')';
-        featMat(:,fIdx) = featMat(:,fIdx-1)./totalBP;
-        featLables{fIdx} = char("Relative Bandpower - "+Prmtr.chansName(i)+newline+...
+        Features.featMat(:,fIdx) = Features.featMat(:,fIdx-1)./totalBP;
+        Features.featLables{fIdx} = char("Relative Bandpower - "+Prmtr.chansName(i)+newline+...
             Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
         fIdx = fIdx + 1;
     end
@@ -140,81 +146,60 @@ for i = 1:nchans
             Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
     %total power and root total power    
     power = sum(PW);
-    featMat(:,fIdx) = power';
-    featLables{fIdx} = "Total Power";
+    Features.featMat(:,fIdx) = power';
+    Features.featLables{fIdx} = "Total Power";
     RTP = sqrt(power);
-    featMat(:,fIdx+1) = RTP';
-    featLables{fIdx+1} = "Root Total Power";
+    Features.featMat(:,fIdx+1) = RTP';
+    Features.featLables{fIdx+1} = "Root Total Power";
     %Spectral fit
     [slope,intercept] = specSlopeInter(PW,f);
-    featMat(:,fIdx+2) = slope;
-    featLables{fIdx+2} = "slope";
-    featMat(:,fIdx+3) = real(log(intercept)); %return the intercept scale
-    featLables{fIdx+3} = "intercept";
+    Features.featMat(:,fIdx+2) = slope;
+    Features.featLables{fIdx+2} = "slope";
+    Features.featMat(:,fIdx+3) = real(log(intercept)); %return the intercept scale
+    Features.featLables{fIdx+3} = "intercept";
     probability = PW./power;    %normalize the power by the total power so it can be treated as a probability
     %spectralMoment
-    featMat(:,fIdx+4) = (f*probability)';
-    featLables{fIdx+4} = "Spectral Moment";
+    Features.featMat(:,fIdx+4) = (f*probability)';
+    Features.featLables{fIdx+4} = "Spectral Moment";
     %Spectral entropy
-    featMat(:,fIdx+5) = (-sum(probability .* log2(probability),1))';
-    featLables{fIdx+5} = "Spectral Entropy";
+    Features.featMat(:,fIdx+5) = (-sum(probability .* log2(probability),1))';
+    Features.featLables{fIdx+5} = "Spectral Entropy";
     %Spectral edge
-    featMat(:,fIdx+6) = (spectralEdge(probability,f,edgePrct))';
-    featLables{fIdx+6} = "Spectral Edge";
+    Features.featMat(:,fIdx+6) = (spectralEdge(probability,f,edgePrct))';
+    Features.featLables{fIdx+6} = "Spectral Edge";
     fIdx = fIdx + 7;
     % mV threshold features
     for j = 1:nTrials
         %number of threshold passings
         ThPassVec = Data.allData(j,:,i) >= Features.mVthrshld;
-        featMat(j,fIdx) = sum(abs(diff(ThPassVec)));
+        Features.featMat(j,fIdx) = sum(abs(diff(ThPassVec)));
         % max mV
         maxV = max(Data.allData(j,:,i));
-        featMat(j,fIdx+1) = maxV;
+        Features.featMat(j,fIdx+1) = maxV;
         % min mV
         minV = min(Data.allData(j,:,i));
-        featMat(j,fIdx+2) = minV;
-        % diff C4 - C3
+        Features.featMat(j,fIdx+2) = minV;
+        % diff between electrodes
         diffAmpSum = sum(Data.allData(j,(Prmtr.miPeriod*fs),2)-Data.allData(j,(Prmtr.miPeriod*fs),1));
-        featMat(j,fIdx+3) = diffAmpSum;
+        Features.featMat(j,fIdx+3) = diffAmpSum;
     end
-    featLables{fIdx} = char("Threshold Pass count - "+Features.mVthrshld+"mV");
-    featLables{fIdx+1} = "Max mV";
-    featLables{fIdx+2} = "Min mV";
-    featLables{fIdx+3} = "diff C4 - C3";
+    Features.featLables{fIdx} = char("Threshold Pass count - "+Features.mVthrshld+"mV");
+    Features.featLables{fIdx+1} = "Max mV";
+    Features.featLables{fIdx+2} = "Min mV";
+    Features.featLables{fIdx+3} = "diff C4 - C3";
     fIdx = fIdx + 4; 
 end
 
+Features.featMat = zscore(Features.featMat);
+
+
 %% histogram
-featMat = zscore(featMat);
-hist = cell(1,nclass);
-binWid = zeros(1,nclass);
-
-for i = 1:size(featMat,2)
-    ttl = char(featLables{i});
-    figure('Units','normalized','Position',globalPos);
-    hold on;
-    for j = 1:length(classes)
-        hist{j} = histogram(featMat(Data.indexes.(classes{j}),i));
-        binWid(j) = hist{j}.BinWidth;
-        hold on;
-        alpha(trnsp);
-    end
-    minWid = max(min(binWid),minBinWid);
-    cellfun(@(x) setfield(x,'BinWidth',minWid), hist,'un', false);
-    cellfun(@(x) setfield(x,'BinCounts',x.BinCounts/nTrials), hist,'un', false); %normelize count  
-    xlim(xLim);
-    title(ttl, 'Units','normalized','Position', globTtlPos);
-    hold off;
-end
-
-featMat = zscore(featMat);
-
-
+mkFeaturesHist(Prmtr,Features,Data);
 %% feature selection
- [featIdx,selectMat] = selectFeat(featMat,Data.lables,numFeatSlect);
- [~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
-% [~,colind] = rref(featMat);
-% featMat = featMat(:, colind); 
+[featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges);
+[~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
+% [~,colind] = rref(Features.featMat);
+% Features.featMat = Features.featMat(:, colind); 
  selectMat = selectMat(:, colind); 
 
 
@@ -238,10 +223,9 @@ printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
 
+confusionchart(cmT,[classes(1) classes(2)]);
 
-confusionchart(cmT,["left" "right"]);
-
-plotPCA(featMat,Data)
+plotPCA(Features.featMat,Data)
 
 
 

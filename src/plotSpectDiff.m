@@ -1,18 +1,10 @@
 
-function plotSpectDiff(data,condition,freq,time,flag)
-%this function compare the chanle or the class-depending on the user
-%selection by flag, from the spectogram results
-    if flag == 1
-        diff1 = data.(condition{1})-data.(condition{3});
-        diff2 = data.(condition{2})-data.(condition{4});
-        spectDiffCond = {diff1,diff2};
-        diffTitle = {'C3Diff','C4Diff'};
-    else
-        diff1 = data.(condition{1})-data.(condition{2});
-        diff2 = data.(condition{3})-data.(condition{4});
-        spectDiffCond = {diff1,diff2};
-        diffTitle = {'left Diff','right Diff'};
-    end
+function plotSpectDiff(data,condition,freq,time)
+%this function calculate mean diff between class for each chanle from the spectogram results
+    diff1 = data.(condition{1})-data.(condition{3});
+    diff2 = data.(condition{2})-data.(condition{4});
+    spectDiffCond = {diff1,diff2};
+    diffTitle = {'C3Diff','C4Diff'};
     figure
     %sgtitle('Spectogram Diff')
     for i = 1:length(spectDiffCond)
@@ -22,13 +14,15 @@ function plotSpectDiff(data,condition,freq,time,flag)
         colormap(jet);
         axis square
         title(diffTitle{i})
-        ylabel ('Frequency [Hz]');
-        if(i>=1)
-            xlabel ('Time [sec]');
+        xlabel ('Time [sec]');
+        if(i==1)
+            ylabel ('Frequency [Hz]');
         end
     end
-    cb = colorbar;
-    pos = [0.94,0.3,0.02,0.35];
-    set(cb,'units','Normalized','position',pos);
+    cb2 = colorbar;
+    cb2.Label.String = 'Power diff [dB]';
+    cb2.FontSize = 10;
+    pos = [0.892708335138942,0.100813007884849,0.016666666666667,0.814634130891833];
+    set(cb2,'units','Normalized','position',pos);
     caxis('auto');
 end

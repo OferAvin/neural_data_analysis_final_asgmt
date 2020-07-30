@@ -34,6 +34,7 @@ Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(
     'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
     'chans',chans,'chansName',chansName,'edgePrct',edgePrct);
 
+flag = 1;
 
 %% Data
 
@@ -54,19 +55,21 @@ for i = 1:nclass
 end
 
 %% features
-Features.nFeatSelect = 14 ;
+Features.nFeatSelect = 16 ;
+
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
 Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
 %mV threshold feature
-Features.mVthrshld = 15;
-Features.nFeat = (length(Features.bandPower)*2+2)*nchans;   %bandpower and relative bandpower
+Features.mVthrshld = 4;
+Features.nFeat = (length(Features.bandPower)*2+2)*nchans; %bandpower and relative bandpower
 %feature selection method
-Features.sfMethod = "ks" ;       %choose between cna  and ks
+Features.sfMethod = "nca" ;%choose between cna  and ks
+
 %% Model training
-k = 5;              %k fold parameter
+k = 8;              %k fold parameter
 results = cell(k,1);
 trainErr = cell(k,1);
 acc = zeros(k,1);
@@ -90,7 +93,7 @@ Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
 %%
 %visualization rand trails
 for i = 1:length(classes)
-%      signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
+      %signalVisualization(Data,Data.indexes.(classes{i}),classes{i},plotPerCol,plotPerRow)
 end
 % calculating PWelch for all condition
 for i = 1:length(classes)
@@ -103,7 +106,7 @@ for i = 1:length(classes)
 end
 
 %visualization PWelch
-% plotPwelch(Data.PWelch,Data.combLables,Prmtr)
+%plotPwelch(Data.PWelch,Data.combLables,Prmtr)
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
@@ -117,9 +120,8 @@ for i =1:length(Data.combLables)
 end
 
 %visualization spectogram
-%  plotSpectogram(Data.spect,Data.combLables,f,timeVec)
-%  plotSpectDiff(Data.spect,Data.combLables,f,timeVec,1)  
-% plotSpectDiff(Data.spect,Data.combLables,f,timeVec,0) 
+%plotSpectogram(Data.spect,Data.combLables,f,timeVec)
+%plotSpectDiff(Data.spect,Data.combLables,f,timeVec)   
 
 %% extracting features
 Features.featMat = zeros(nTrials,Features.nFeat);
@@ -127,30 +129,15 @@ fIdx = 1;
 Features.featLables = cell(1,Features.nFeat);
 Features = extractFeatures(Data,Prmtr,Features,fIdx);
 Features.featMat = zscore(Features.featMat);
-%% histogram
-% for i = 1:size(featMat,2)
-%     figure(i);
-%     for j = 1:length(classes)
-%         hist{j} = histogram(featMat(Data.indexes.(classes{j}),i));
-%         binWid(j) = hist{j}.BinWidth;
-%         hold on;
-%         alpha(0.5);
-%     end
-%     minWid = min(binWid);
-%     cellfun(@(x) edditBinWD(x,minWid), hist,'un', false);
-%     xlim(xLim);
-%     hold off;
-% end
 
 %% histogram
 %mkFeaturesHist(Prmtr,Features,Data);
-
 %% feature selection
-% [featIdx,selectMat] = selectFeat(Features.featMat,Data.lables,Features.nFeatSelect);
- %[~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
- [~,colind] = rref(Features.featMat);
- Features.featMat = Features.featMat(:, colind); 
- %selectMat = selectMat(:, colind); 
+% [featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges);
+% [~,colind] = rref(selectMat);       % check for lineary dependent col and remove them
+[~,colind] = rref(Features.featMat);
+Features.featMat = Features.featMat(:, colind); 
+%selectMat = selectMat(:, colind); 
 
 
 %% k fold cross-validation
@@ -161,7 +148,7 @@ cmT = zeros(nclass,nclass);
 for i = 1:k
     testSet = logical(idxSegments == i)';
     trainSet = logical(idxSegments ~= i)';
-    [results{i},trainErr{i}] = classify(selectMat(testSet,:),selectMat(trainSet,:),Data.lables(trainSet),'linear');
+    [results{i},trainErr{i}] = classify(Features.featMat(testSet,:),Features.featMat(trainSet,:),Data.lables(trainSet),'linear');
     acc(i) = sum(results{i} == Data.lables(testSet));
     acc(i) = acc(i)/length(results{i})*100;
     
@@ -172,9 +159,10 @@ end
 printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
-confusionchart(cmT,[classes(1) classes(2)]);
 
-plotPCA(Features.featMat,Data)
+%confusionchart(cmT,[classes(1) classes(2)]);
+%plotPCA(Features.featMat,Data)
+
 
 
 

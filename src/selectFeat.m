@@ -1,4 +1,4 @@
-function [featIdx,selectMat] = selectFeat(Features,labels,distPrecision,nFeat2Reduce)
+function [featIdx,selectMat,featOrder] = selectFeat(Features,labels,distPrecision,nFeat2Reduce)
 % this function extract the n best fearures using one of 2 method
 % Features - struct that containing all features data lables and parameters
 % nFeat2Reduce = the num of feature to slect
@@ -7,11 +7,11 @@ function [featIdx,selectMat] = selectFeat(Features,labels,distPrecision,nFeat2Re
         Selection = fscnca(Features.featMat,labels);
         weights = Selection.FeatureWeights;
     else
-        weights = fsks(Features.featMat,labels,distPrecision); 
+        weights = fsks(Features.featMat,labels); 
     end
     %Decsending order of importence
-    [~ , feat_order] = sort(weights, 'descend');
+    [~ , featOrder] = sort(weights, 'descend');
     %Taking the most importent features
-    featIdx = feat_order(1:nFeat2Reduce);
+    featIdx = featOrder(1:nFeat2Reduce);
     selectMat = Features.featMat(:,(featIdx));
 end

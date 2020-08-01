@@ -18,9 +18,9 @@ miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
 edgePrct = 90;                              %spectral edge percentaile
 
-chans = cell2mat(P_C_S.channelname(1:3));   %channels in use
+chans = cell2mat(P_C_S.channelname(1:2));   %channels in use
 chans = str2num(chans);
-chansName = ["C3" "C4" "CZ"];                    %channels names should corresponds to chans 
+chansName = ["C3" "C4"];                    %channels names should corresponds to chans 
 nchans = length(chans);                     % num of channels
 
 nclass = 2;                                 %this project support two classes only
@@ -36,7 +36,7 @@ Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(
     'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
     'chans',chans,'chansName',chansName,'nchans',nchans,'edgePrct',edgePrct);
 
-isTrainMode = 1; % to check the best num of features to select using analyzeNumOfFeat function
+isTrainMode = 0; % to check the best num of features to select using analyzeNumOfFeat function
 % flag = 0; % use Features.nFeatSelect pram for the features selection
 
 
@@ -60,7 +60,7 @@ end
 
 %% features
 % creating struct for the features
-Features.nFeatSelect = 7 ;     %number of features to select for classification
+Features.nFeatSelect = 15 ;     %number of features to select for classification
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
@@ -75,7 +75,7 @@ generalFeat = 10;                               %number of general features shou
 %Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
 %Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage 
 
-nDifFeat = 1;                                   %number of diffs between chanle should be 1!
+nDifFeat = 1;                   %number of diffs between chanle should be 1!
 Features.nFeat = ((nBandPowerFeat+generalFeat)*nclass)+ nDifFeat; %num of total features feature selection method
 
 Features.sfMethod = "nca";       %choose feature selection method between cna  and ks
@@ -148,7 +148,7 @@ Features = extractFeatures(Data.allData,Prmtr,Features,'featMat',fIdx);   %calc 
 [Features.featMat,meanTrain,SdTrain] = zscore(Features.featMat);            % scale all features
 
 %% histogram
-% makeFeaturesHist(Prmtr,Features,Data);
+makeFeaturesHist(Prmtr,Features,Data);
 
 %% feature selection
 if isTrainMode == 1     %if true than check best num of features by loop through all features
@@ -167,7 +167,7 @@ for iter = 1:numOfIter  %in case that train mode is on this loop will finde the 
     if isTrainMode 
         Features.nFeatSelect = iter;
     end
-    [featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges,Features.nFeatSelect); 
+    [featIdx,selectMat,featOrder] = selectFeat(Features,Data.lables,binEdges,Features.nFeatSelect); 
 
 %% Train model with cross-validation
     idxSegments = mod(randperm(nTrials),k)+1;   %randomly split trails in to k groups
@@ -204,7 +204,8 @@ else
     printAcc(accAvg,accSD,1);
     trainAcc = (1-cell2mat(trainErr))*100;
     printAcc(trAccAvg,trAccSD,0);
-    confusionchart(cmT,[classes(1) classes(2)]);
+    cmChart = confusionchart(cmT,[classes(1) classes(2)]);
+    cmChart.Title = char(classes(1)+" "+classes(2)+" classification");
 end
 
 

@@ -30,9 +30,11 @@ function bestFeatNum = analyzeNumOfFeat(Prmtr,analyzeMath,numSelectFeat)
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     suptitle('F1 Score by Num Of Features');
     plot(numFeatVec,analyzeMath(:,1),'b')
+    hold on;
     xlabel('Num Of Selected Feature')
     ylabel('F1 Score')
     Leg3 = legend('F1 Score');
     set(Leg3,'location','southeast');
     [~,bestFeatNum] = max(analyzeMath(:,1));
+    plot(numFeatVec(bestFeatNum),analyzeMath(bestFeatNum),'or','LineWidth',8);
 end

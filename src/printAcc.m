@@ -1,16 +1,12 @@
-function printAcc(score,isValden)
-% this function gets scores vector for each fold and if the scores belongs
-% to the validation set, calculating mean and SD and print it.
-%     - score must be a numeric vector
+function printAcc(accAvg,accSD,isValden)
+% this function gets accuracy mean and SD and print it.
 %     - isValden must be logical value, True - validation set,
 %       False - train set
-    AccAvg = mean(score);
-    AccSD = std(score);
     if isValden
         set = "validation";
     else
         set = "train";
     end
-    msg = char("The "+set+" accuracy is: "+AccAvg+char(177)+AccSD+"%");  
+    msg = char("The "+set+" accuracy is: "+accAvg+char(177)+accSD+"%");  
     disp(msg);
 end 

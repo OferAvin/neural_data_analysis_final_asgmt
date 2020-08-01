@@ -4,6 +4,7 @@ close all
 
 %% expariment param
 load('motor_imagery_train_data.mat');       % trainig data
+testFileName = 'motor_imagery_test_data.mat';
 fs = P_C_S.samplingfrequency;               %sampling frequency, Hz
 dt = 1/fs;                                  %time step [sec]
 nTrials = size(P_C_S.data,1);               % num of trails
@@ -66,6 +67,7 @@ Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
 %mV threshold feature
 Features.mVthrshld = 4;
+Features.diffBetween = ["c3","c4"];             % choose elctrode to calc diff
 nBandPowerFeat = length(Features.bandPower)*2;  %bandpower and relative bandpower for each relevant range
 moreFeat = 10;             %Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
 %Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage
@@ -135,8 +137,8 @@ plotSpectDiff(Data,Prmtr)
 Features.featMat = zeros(nTrials,Features.nFeat);       %allocate space
 fIdx = 1;                                               % index for the co-responding feature to  col
 Features.featLables = cell(1,Features.nFeat);           %allocate space to features name
-Features = extractFeatures(Data,Prmtr,Features,fIdx);   %calc and extract all features
-Features.featMat = zscore(Features.featMat);            % scale all features
+Features = extractFeatures(Data.allData,Prmtr,Features,'featMat',fIdx);   %calc and extract all features
+[Features.featMat,meanTrain,SdTrain] = zscore(Features.featMat);            % scale all features
 
 %% histogram
 makeFeaturesHist(Prmtr,Features,Data);
@@ -155,13 +157,13 @@ cmT = zeros(nclass,nclass);                 % allocate space for confusion matri
 
 for i = 1:k
 % each test on 1 group and train on the else
-    testSet = logical(idxSegments == i)';
+    validSet = logical(idxSegments == i)';
     trainSet = logical(idxSegments ~= i)';
-    [results{i},trainErr{i}] = classify(selectMat(testSet,:),selectMat(trainSet,:),Data.lables(trainSet),'linear');
-    acc(i) = sum(results{i} == Data.lables(testSet));
+    [results{i},trainErr{i}] = classify(selectMat(validSet,:),selectMat(trainSet,:),Data.lables(trainSet),'linear');
+    acc(i) = sum(results{i} == Data.lables(validSet));
     acc(i) = acc(i)/length(results{i})*100;
     %build the confusion matrix
-    cm = confusionmat(Data.lables(testSet),results{i});
+    cm = confusionmat(Data.lables(validSet),results{i});
     cmT = cmT + cm;
 end
 %calculate and print results
@@ -169,8 +171,26 @@ printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
 
-% confusionchart(cmT,[classes(1) classes(2)]);
+%% Test
+%Load test data
 
+load(testFileName)
+testData = data(:,:,1:length(Prmtr.chans));
+
+%Test feature extraction
+
+Features.TestFeatMat = zeros(size(testData,1),Features.nFeat);                   %allocate space
+Features = extractFeatures(testData,Prmtr,Features,'TestFeatMat',fIdx);     %calc and extract all features
+
+%Test feature selection
+Features.TestFeatMat = Features.TestFeatMat(:,featIdx);                 %choosing the same features
+Features.TestFeatMat = (Features.TestFeatMat - meanTrain(:,featIdx))./SdTrain(:,featIdx);      % scale according to train data
+
+%Test classifier - output is the classifier predictions for test data.
+testPredict = classify(Features.TestFeatMat,selectMat,Data.lables,'linear');
+
+%% Last Plot
+% confusionchart(cmT,[classes(1) classes(2)]);
 % plot PCA
 plotPCA(Features.featMat,Data,Prmtr)
 

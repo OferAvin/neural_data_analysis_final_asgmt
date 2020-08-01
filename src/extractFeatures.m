@@ -13,13 +13,13 @@ for i = 1:length(Prmtr.chans)
         Features.(Matrix)(:,fIdx) = ...
             (bandpower(Data(:,tRange,i)',Prmtr.fs,Features.bandPower{j}{1}))';
         Features.featLables{fIdx} =char("Bandpower - "+Prmtr.chansName(i)+newline+...
-            Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
+            " "+Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
         fIdx = fIdx + 1;
         %relative bandpower
         totalBP = bandpower(Data(:,tRange,i)')';
         Features.(Matrix)(:,fIdx) = Features.(Matrix)(:,fIdx-1)./totalBP;
         Features.featLables{fIdx} = char("Relative Bandpower - "+Prmtr.chansName(i)+newline+...
-            Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
+            " "+Features.bandPower{j}{1}(1)+"Hz - "+Features.bandPower{j}{1}(2)+"Hz");
         fIdx = fIdx + 1;
     end
     PW = pwelch(Data(:,(Prmtr.miPeriod*Prmtr.fs),i)',...

@@ -60,7 +60,7 @@ end
 
 %% features
 % creating struct for the features
-Features.nFeatSelect = 15 ;     %number of features to select for classification
+Features.nFeatSelect = 8 ;     %number of features to select for classification
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
@@ -75,7 +75,7 @@ generalFeat = 10;                               %number of general features shou
 %Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
 %Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage 
 
-nDifFeat = 1;                   %number of diffs between chanle should be 1!
+nDifFeat = 0;                   %number of diffs between chanle should be 1!
 Features.nFeat = ((nBandPowerFeat+generalFeat)*nclass)+ nDifFeat; %num of total features feature selection method
 
 Features.sfMethod = "nca";       %choose feature selection method between cna  and ks

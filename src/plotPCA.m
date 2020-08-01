@@ -1,12 +1,11 @@
-function plotPCA(featMet,data)
+function plotPCA(featMet,data,Prmtr)
 % function that compute PCA and Ploting the seperation of 2 and 3 dimensions PCA 
     comp = pca(featMet);
     comp = comp(:,1:3);
     component = (featMet * comp)';
-    figure
+    figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     sz = 11;    %Scatter dots size 
     %2 dimentional
-    
     subplot(1,2,1)
     title('2 Dimentional PCA')
     scatter(component(1,(data.indexes.LEFT)),...
@@ -17,7 +16,6 @@ function plotPCA(featMet,data)
     xlabel('PC1'); ylabel('PC2');
     set(gca,'YDir','normal')
     %3 dimentional
-    
     subplot(1,2,2)
     title('3 Dimentional PCA')
     scatter3(component(1,(data.indexes.LEFT)),...

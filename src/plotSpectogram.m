@@ -2,7 +2,7 @@
 function plotSpectogram(Data,Prmtr)
 %this function plot the spctral power for each condition returned by
 %spectogram commend
-    figure
+    figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     %sgtitle('Power Spectogram');
     for i = 1:length(Data.combLables)
         subplot(2,2,i)

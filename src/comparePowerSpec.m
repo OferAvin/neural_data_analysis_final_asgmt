@@ -1,7 +1,7 @@
 
 function comparePowerSpec(Data,Prmtr)
 %this function compare the chanle for each class for the PWelch results
-    figure
+    figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     %sgtitle('Compare Power Spec by chanle')
     for i =1:length(Prmtr.chansName)
         subplot(2,1,i)

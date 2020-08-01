@@ -35,7 +35,7 @@ Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(
     'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
     'chans',chans,'chansName',chansName,'edgePrct',edgePrct);
 
-flag = 1; % to check the best num of features to select using analyzeNumOfFeat function
+flag = 0; % to check the best num of features to select using analyzeNumOfFeat function
 % flag = 0; % use Features.nFeatSelect pram for the features selection
 
 %% Data
@@ -69,6 +69,7 @@ Features.mVthrshld = 4;
 nBandPowerFeat = length(Features.bandPower)*2;  %bandpower and relative bandpower for each relevant range
 moreFeat = 10;             %Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
 %Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage
+
 bothChanFeatTogether = 1;                       %diff Amplitude between chanle
 Features.nFeat = ((nBandPowerFeat+moreFeat)*nclass)+ bothChanFeatTogether; %num of total features
 %feature selection method
@@ -116,7 +117,7 @@ end
 
 
 %visualization PWelch
- plotPwelch(Data,Prmtr)
+plotPwelch(Data,Prmtr)
  
 % calculating spectrogram for all conditions
 
@@ -173,7 +174,7 @@ printAcc(acc,1);
 trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
 
-% confusionchart(cmT,[classes(1) classes(2)]);
+confusionchart(cmT,[classes(1) classes(2)]);
 
 % plot PCA
 plotPCA(Features.featMat,Data,Prmtr)

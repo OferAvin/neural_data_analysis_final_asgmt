@@ -18,9 +18,9 @@ miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
 edgePrct = 90;                              %spectral edge percentaile
 
-chans = cell2mat(P_C_S.channelname(1:2));   %channels in use
+chans = cell2mat(P_C_S.channelname(1:3));   %channels in use
 chans = str2num(chans);
-chansName = ["c3" "c4"];                    %channels names should corresponds to chans 
+chansName = ["C3" "C4" "CZ"];                    %channels names should corresponds to chans 
 nchans = length(chans);                     % num of channels
 
 nclass = 2;                                 %this project support two classes only
@@ -34,10 +34,11 @@ ntrialsPerClass = [sum(P_C_S.attribute(clasRow{1},:)==1),...
 Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(window*fs),...
     'winOvlp',floor(windOverlap*fs),'miPeriod',miPeriod,'nclass',nclass,'classes',classes, ...
     'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
-    'chans',chans,'chansName',chansName,'edgePrct',edgePrct);
+    'chans',chans,'chansName',chansName,'nchans',nchans,'edgePrct',edgePrct);
 
-flag = 0; % to check the best num of features to select using analyzeNumOfFeat function
+isTrainMode = 1; % to check the best num of features to select using analyzeNumOfFeat function
 % flag = 0; % use Features.nFeatSelect pram for the features selection
+
 
 %% Data
 % creating struct for all relevant data and arrange it 
@@ -65,20 +66,19 @@ Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
 Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
+nBandPowerFeat = length(Features.bandPower)*2;  %bandpower and relative bandpower for each relevant range
 %mV threshold feature
 Features.mVthrshld = 4;
-Features.diffBetween = ["c3","c4"];             % choose elctrode to calc diff
-nBandPowerFeat = length(Features.bandPower)*2;  %bandpower and relative bandpower for each relevant range
-moreFeat = 10;             %Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
-%Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage
+Features.diffBetween = ["C3","C4"];             % choose two elctrode to calc diff
 
-bothChanFeatTogether = 1;                       %diff Amplitude between chanle
-Features.nFeat = ((nBandPowerFeat+moreFeat)*nclass)+ bothChanFeatTogether; %num of total features
-%feature selection method
+generalFeat = 10;                               %number of general features should be 10!
+%Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
+%Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage 
 
-Features.sfMethod = "ks";       %choose between cna  and ks
+nDifFeat = 1;                                   %number of diffs between chanle should be 1!
+Features.nFeat = ((nBandPowerFeat+generalFeat)*nclass)+ nDifFeat; %num of total features feature selection method
 
-
+Features.sfMethod = "nca";       %choose feature selection method between cna  and ks
 
 %% Model training
 k = 5;                  %k fold parameter
@@ -103,6 +103,9 @@ Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
     'signalPerFig',signalPerFig,'plotPerRow',plotPerRow,'plotPerCol',plotPerCol,...
     'xLim',xLim,'binEdges',binEdges,'trnsp',trnsp);
 
+%% ************************* Start of Project ***************************
+
+%% data visualization
 %visualization of the signal in Voltage[mV] for rand co-responding trails 
 for i = 1:length(classes)
       signalVisualization(Data,i,Prmtr)
@@ -116,7 +119,6 @@ for i = 1:length(classes)
             Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
     end
 end
-
 
 %visualization PWelch
 plotPwelch(Data,Prmtr)
@@ -146,45 +148,72 @@ Features = extractFeatures(Data.allData,Prmtr,Features,'featMat',fIdx);   %calc 
 [Features.featMat,meanTrain,SdTrain] = zscore(Features.featMat);            % scale all features
 
 %% histogram
-makeFeaturesHist(Prmtr,Features,Data);
+% makeFeaturesHist(Prmtr,Features,Data);
 
 %% feature selection
-if flag == 1
-    Features.nFeatSelect = analyzeNumOfFeat(Data,Prmtr,Features,k);
+if isTrainMode == 1     %if true than check best num of features by loop through all features
+    numOfIter = Features.nFeat;
+    f1 = zeros(numOfIter,1);
+    accAvg = zeros(numOfIter,1);
+    trAccAvg = zeros(numOfIter,1);
+    accSD = zeros(numOfIter,1);
+    trAccSD = zeros(numOfIter,1);
+else
+    numOfIter = 1;      %if false than train model once with nFeatSelect features
 end 
-%select only the best features 
-[featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges,Features.nFeatSelect); 
 
-%% k fold cross-validation
+for iter = 1:numOfIter  %in case that train mode is on this loop will finde the best num of features
+    %select only the nFeatSelect best features
+    if isTrainMode 
+        Features.nFeatSelect = iter;
+    end
+    [featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges,Features.nFeatSelect); 
 
-idxSegments = mod(randperm(nTrials),k)+1;   %randomly split trails in to k groups
-cmT = zeros(nclass,nclass);                 % allocate space for confusion matrix
-
-for i = 1:k
-% each test on 1 group and train on the else
-    validSet = logical(idxSegments == i)';
-    trainSet = logical(idxSegments ~= i)';
-    [results{i},trainErr{i}] = classify(selectMat(validSet,:),selectMat(trainSet,:),Data.lables(trainSet),'linear');
-    acc(i) = sum(results{i} == Data.lables(validSet));
-    acc(i) = acc(i)/length(results{i})*100;
-    %build the confusion matrix
-    cm = confusionmat(Data.lables(validSet),results{i});
-    cmT = cmT + cm;
+%% Train model with cross-validation
+    idxSegments = mod(randperm(nTrials),k)+1;   %randomly split trails in to k groups
+    cmT = zeros(nclass,nclass);                 % allocate space for confusion matrix
+    for i = 1:k
+    % each test on 1 group and train on the else
+        validSet = logical(idxSegments == i)';
+        trainSet = logical(idxSegments ~= i)';
+        [results{i},trainErr{i}] =...
+            classify(selectMat(validSet,:),selectMat(trainSet,:),Data.lables(trainSet),'linear');
+        acc(i) = sum(results{i} == Data.lables(validSet));
+        acc(i) = acc(i)/length(results{i})*100;
+        %build the confusion matrix
+        cm = confusionmat(Data.lables(validSet),results{i});
+        cmT = cmT + cm;
+    end
+    %calculate accuracy and f1
+    percision = cmT(1,1)/(cmT(1,1) + cmT(1,2));
+    recall = cmT(1,1)/(cmT(1,1) + cmT(2,1));
+    f1(iter) = 2*((percision*recall)/(percision+recall));
+   
+    accAvg(iter) = mean(acc);
+    accSD(iter) = std(acc);
+        
+    trainAcc = (1-cell2mat(trainErr))*100;
+    trAccAvg(iter) = mean(trainAcc);
+    trAccSD(iter) = std(trainAcc);
 end
-%calculate and print results
-printAcc(acc,1);
-trainAcc = (1-cell2mat(trainErr))*100;
-printAcc(trainAcc,0);
 
-%% Last Plot
-confusionchart(cmT,[classes(1) classes(2)]);
+if isTrainMode == 1
+    disp(char("optimal number of features is: "+...
+        analyzeNumOfFeat(Prmtr,[f1,accAvg,accSD,trAccAvg,trAccSD],iter)));
+else
+    printAcc(accAvg,accSD,1);
+    trainAcc = (1-cell2mat(trainErr))*100;
+    printAcc(trAccAvg,trAccSD,0);
+    confusionchart(cmT,[classes(1) classes(2)]);
+end
+
+
 % plot PCA
 plotPCA(Features.featMat,Data,Prmtr)
 
 
 %% Test
 %Load test data
-
 
 load(testFileName)
 testData = data(:,:,1:length(Prmtr.chans));

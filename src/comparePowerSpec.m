@@ -4,7 +4,7 @@ function comparePowerSpec(Data,Prmtr)
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     %sgtitle('Compare Power Spec by chanle')
     for i =1:length(Prmtr.chansName)
-        subplot(2,1,i)
+        subplot(Prmtr.nchans,1,i)
         plot(Prmtr.freq,mean(Data.PWelch.(Data.combLables{i}),2),'b')   %left
         hold on
         plot(Prmtr.freq,mean(Data.PWelch.(Data.combLables{i+2}),2),'r') %right

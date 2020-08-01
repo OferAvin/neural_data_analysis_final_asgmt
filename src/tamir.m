@@ -65,7 +65,7 @@ Features.bandPower{4} = {[17,21],[1.2,2.7]};
 Features.mVthrshld = 4;
 Features.nFeat = (length(Features.bandPower)*2+2)*nchans; %bandpower and relative bandpower
 %feature selection method
-Features.sfMethod = "nca" ;%choose between cna  and ks
+Features.sfMethod = "ks" ;%choose between cna  and ks
 %% Model training
 k = 5;              %k fold parameter
 results = cell(k,1);

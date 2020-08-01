@@ -1,4 +1,7 @@
 function [featIdx,selectMat] = selectFeat(Features,labels,distPrecision,nFeat2Reduce)
+% this function extract the n best fearures using one of 2 method
+% Features - struct that containing all features data lables and parameters
+% nFeat2Reduce = the num of feature to slect
     %Selecting features by method
     if Features.sfMethod == "nca"
         Selection = fscnca(Features.featMat,labels);

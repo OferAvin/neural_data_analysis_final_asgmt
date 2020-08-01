@@ -1,8 +1,8 @@
 function plotPCA(featMet,data,Prmtr)
 % function that compute PCA and Ploting the seperation of 2 and 3 dimensions PCA 
     comp = pca(featMet);
-    comp = comp(:,1:3);
-    component = (featMet * comp)';
+    comp = comp(:,1:3);             %choose the best 3 PCA 
+    component = (featMet * comp)';  % coded matrix
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     sz = 11;    %Scatter dots size 
     %2 dimentional

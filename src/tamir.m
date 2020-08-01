@@ -59,7 +59,7 @@ end
 
 %% features
 % creating struct for the features
-Features.nFeatSelect = 10 ;     %number of features to select for classification
+Features.nFeatSelect = 7 ;     %number of features to select for classification
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
@@ -190,7 +190,7 @@ Features.TestFeatMat = (Features.TestFeatMat - meanTrain(:,featIdx))./SdTrain(:,
 testPredict = classify(Features.TestFeatMat,selectMat,Data.lables,'linear');
 
 %% Last Plot
-% confusionchart(cmT,[classes(1) classes(2)]);
+confusionchart(cmT,[classes(1) classes(2)]);
 % plot PCA
 plotPCA(Features.featMat,Data,Prmtr)
 

@@ -5,13 +5,13 @@ function plotSpectogram(Data,Prmtr)
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     %sgtitle('Power Spectogram');
     for i = 1:length(Data.combLables)   %looping all condition
-        subplot(2,2,i)
+        subplot(Prmtr.nclass,Prmtr.nchans,i)
         imagesc(Prmtr.time,Prmtr.freq,Data.spect.(Data.combLables{i}))
         set(gca,'YDir','normal')
         colormap(jet);
         axis square
         title(Data.combLables{i});
-        if(i==1 || i==3)
+        if(mod(i-1,3) == 0)
             ylabel ('Frequency [Hz]');
         end
         if(i>2)

@@ -1,6 +1,8 @@
 %MATLAB 2019a
-clear all
-close all
+%this code loads an EEG structure extarcts feature out of the data and trains an LDA model
+%to predict between two classes
+clear all;
+close all;
 
 %% expariment param
 load('motor_imagery_train_data.mat');       % trainig data
@@ -36,9 +38,10 @@ Prmtr = struct('fs',fs,'time',timeVec,'freq',f,'nTrials',nTrials,'winLen',floor(
     'clasRow',cell2mat(clasRow),'ntrialsPerClass',ntrialsPerClass,...
     'chans',chans,'chansName',chansName,'nchans',nchans,'edgePrct',edgePrct);
 
-isTrainMode = 0; % to check the best num of features to select using analyzeNumOfFeat function
-% flag = 0; % use Features.nFeatSelect pram for the features selection
 
+isTrainMode = 0; % if set to 1 than the script will ran a loop in order to 
+%check the best num of features to select using analyzeNumOfFeat function
+%when is set to 0 a normal run will occur
 
 %% Data
 % creating struct for all relevant data and arrange it 
@@ -68,17 +71,18 @@ Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
 nBandPowerFeat = length(Features.bandPower)*2;  %bandpower and relative bandpower for each relevant range
 %mV threshold feature
-Features.mVthrshld = 4;
+Features.mVthrshld = 4;                         %in muV
 Features.diffBetween = ["C3","C4"];             % choose two elctrode to calc diff
 
 generalFeat = 10;                               %number of general features should be 10!
 %Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
 %Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage 
 
-nDifFeat = 0;                   %number of diffs between chanle should be 1!
+nDifFeat = 0;               %number of diffs between chanle should be 1!
 Features.nFeat = ((nBandPowerFeat+generalFeat)*nclass)+ nDifFeat; %num of total features feature selection method
 
-Features.sfMethod = "nca";       %choose feature selection method between cna  and ks
+Features.sfMethod = "nca";  %choose feature selection method between cna  and ks
+Features.distPrecision = 5;    %only in case you run ks for feature selection           
 
 %% Model training
 k = 5;                  %k fold parameter
@@ -106,7 +110,7 @@ Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
 %% ************************* Start of Project ***************************
 
 %% data visualization
-%visualization of the signal in Voltage[mV] for rand co-responding trails 
+%visualization of the signal in Voltage[muV] for rand co-responding trails 
 for i = 1:length(classes)
       signalVisualization(Data,i,Prmtr)
 end
@@ -167,7 +171,7 @@ for iter = 1:numOfIter  %in case that train mode is on this loop will finde the 
     if isTrainMode 
         Features.nFeatSelect = iter;
     end
-    [featIdx,selectMat,featOrder] = selectFeat(Features,Data.lables,binEdges,Features.nFeatSelect); 
+    [featIdx,selectMat,featOrder] = selectFeat(Features,Data.lables); 
 
 %% Train model with cross-validation
     idxSegments = mod(randperm(nTrials),k)+1;   %randomly split trails in to k groups

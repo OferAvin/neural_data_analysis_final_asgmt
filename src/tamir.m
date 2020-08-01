@@ -18,9 +18,9 @@ miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
 edgePrct = 90;                              %spectral edge percentaile
 
-chans = cell2mat(P_C_S.channelname(1:3));   %channels in use
+chans = cell2mat(P_C_S.channelname(1:2));   %channels in use
 chans = str2num(chans);
-chansName = ["C3" "C4" "CZ"];                    %channels names should corresponds to chans 
+chansName = ["C3" "C4"];                    %channels names should corresponds to chans 
 nchans = length(chans);                     % num of channels
 
 nclass = 2;                                 %this project support two classes only

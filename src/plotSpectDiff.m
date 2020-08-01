@@ -5,7 +5,7 @@ function plotSpectDiff(Data,Prmtr)
     diff2 = Data.spect.(Data.combLables{2})-Data.spect.(Data.combLables{4});
     spectDiffCond = {diff1,diff2};
     diffTitle = {'C3Diff','C4Diff'};
-    figure
+    figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     %sgtitle('Spectogram Diff')
     for i = 1:length(spectDiffCond)
         subplot(length(spectDiffCond),1,i)

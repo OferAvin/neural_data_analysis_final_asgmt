@@ -91,7 +91,7 @@ Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
 %%
 %visualization rand trails
 for i = 1:length(classes)
-%       signalVisualization(Data,i,Prmtr)
+      signalVisualization(Data,i,Prmtr)
 end
 % calculating PWelch for all condition
 for i = 1:length(classes)
@@ -104,7 +104,8 @@ for i = 1:length(classes)
 end
 
 %visualization PWelch
-%  plotPwelch(Data,Prmtr)
+ plotPwelch(Data,Prmtr)
+ 
 % calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)
@@ -118,8 +119,8 @@ for i =1:length(Data.combLables)
 end
 
 %visualization spectogram
-% plotSpectogram(Data,Prmtr)
-% plotSpectDiff(Data,Prmtr)  
+plotSpectogram(Data,Prmtr)
+plotSpectDiff(Data,Prmtr)  
  
 
 %% extracting features
@@ -130,15 +131,13 @@ Features = extractFeatures(Data,Prmtr,Features,fIdx);
 Features.featMat = zscore(Features.featMat);
 
 %% histogram
-% mkFeaturesHist(Prmtr,Features,Data);
+makeFeaturesHist(Prmtr,Features,Data);
 
 %% feature selection
 if flag == 1
     Features.nFeatSelect = analyzeNumOfFeat(Data,Prmtr,Features,k);
 end   
-[featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges,Features.nFeatSelect);
-% Features.featMat = Features.featMat(:, colind); 
-% selectMat = selectMat(:, colind); 
+[featIdx,selectMat] = selectFeat(Features,Data.lables,binEdges,Features.nFeatSelect); 
 
 %% k fold cross-validation
 
@@ -161,7 +160,7 @@ trainAcc = (1-cell2mat(trainErr))*100;
 printAcc(trainAcc,0);
 
 % confusionchart(cmT,[classes(1) classes(2)]);
-plotPCA(Features.featMat,Data)
+plotPCA(Features.featMat,Data,Prmtr)
 
 
 

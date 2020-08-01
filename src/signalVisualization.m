@@ -5,7 +5,7 @@ function signalVisualization(Data,class,Prmtr)
    randIndex_trails = Data.indexes.(Prmtr.classes{class})...
        (randperm(length(Data.indexes.(Prmtr.classes{class})),...
        (Prmtr.Vis.plotPerRow*Prmtr.Vis.plotPerCol)));
-   figure
+   figure('Units','normalized','Position',Prmtr.Vis.globalPos);
 %    if (Prmtr.classes{i} == 'LEFT')
 %        sgtitle('Left Imagery')
 %    elseif(Prmtr.classes{i} == 'RIGHT')

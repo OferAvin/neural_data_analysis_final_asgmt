@@ -4,7 +4,7 @@ function plotSpectogram(Data,Prmtr)
 %spectogram commend
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     %sgtitle('Power Spectogram');
-    for i = 1:length(Data.combLables)
+    for i = 1:length(Data.combLables)   %looping all condition
         subplot(2,2,i)
         imagesc(Prmtr.time,Prmtr.freq,Data.spect.(Data.combLables{i}))
         set(gca,'YDir','normal')

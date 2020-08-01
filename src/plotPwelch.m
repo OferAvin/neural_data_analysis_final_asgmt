@@ -3,7 +3,7 @@ function plotPwelch(Data,Prmtr)
 %this function plot the mean spctral power by freq for each condition returned by pwelch commend
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
     %sgtitle('Power Spect by PWelch')
-    for i = 1:length(Data.combLables)
+    for i = 1:length(Data.combLables)   %looping all condition
         subplot(2,2,i)
         plot(Prmtr.freq,mean(Data.PWelch.(Data.combLables{i}),2))
         title(Data.combLables{i});hold on

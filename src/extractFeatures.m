@@ -1,11 +1,11 @@
 function [Features] = extractFeatures(Data,Prmtr,Features,fIdx)
-% function that extract all fearures 
+% function that extract all fearures and arrange it in a matrix
 % Data - all data for extracting the features
 % Prmtr - all parameter of the Data
 % Features - struct that containing all features data lables and parameters
 % fIdx - curr index for insert fearure and lable 
 for i = 1:length(Prmtr.chans)
-    for j = 1:length(Features.bandPower)   
+    for j = 1:length(Features.bandPower)    %looping over relevant range  
         tRange = (Prmtr.time >= Features.bandPower{j}{2}(1) & ...
             Prmtr.time <= Features.bandPower{j}{2}(2));
         %raw bandpower
@@ -22,40 +22,40 @@ for i = 1:length(Prmtr.chans)
         fIdx = fIdx + 1;
     end
     PW = pwelch(Data.allData(:,(Prmtr.miPeriod*Prmtr.fs),i)',...
-            Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);
+            Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs);    %calc PWelch for features
     %total power and root total power    
     power = sum(PW);
     Features.featMat(:,fIdx) = power';
-    Features.featLables{fIdx} = char("Total Power " + Prmtr.chansName{i});
+    Features.featLables{fIdx} = char("Total Power " + Prmtr.chansName{i});  %update the feature name
     RTP = sqrt(power);
     Features.featMat(:,fIdx+1) = RTP';
-    Features.featLables{fIdx+1} = char("Root Total Power "+ Prmtr.chansName{i});
+    Features.featLables{fIdx+1} = char("Root Total Power "+ Prmtr.chansName{i});%update the feature name
     %Spectral fit
     [slope,intercept] = specSlopeInter(PW,Prmtr.freq);
     Features.featMat(:,fIdx+2) = slope;
-    Features.featLables{fIdx+2} = char("Slope "+ Prmtr.chansName{i});
+    Features.featLables{fIdx+2} = char("Slope "+ Prmtr.chansName{i});%update the feature name
     Features.featMat(:,fIdx+3) = real(log(intercept)); %return the intercept scale
-    Features.featLables{fIdx+3} = char("Intercept "+ Prmtr.chansName{i});
+    Features.featLables{fIdx+3} = char("Intercept "+ Prmtr.chansName{i});%update the feature name
     probability = PW./power;    %normalize the power by the total power so it can be treated as a probability
     %spectralMoment
     Features.featMat(:,fIdx+4) = (Prmtr.freq*probability)';
-    Features.featLables{fIdx+4} = char("Spectral Moment "+ Prmtr.chansName{i});
+    Features.featLables{fIdx+4} = char("Spectral Moment "+ Prmtr.chansName{i});%update the feature name
     %Spectral entropy
     Features.featMat(:,fIdx+5) = (-sum(probability .* log2(probability),1))';
-    Features.featLables{fIdx+5} = char("Spectral Entropy "+ Prmtr.chansName{i});
+    Features.featLables{fIdx+5} = char("Spectral Entropy "+ Prmtr.chansName{i});%update the feature name
     %Spectral edge
     Features.featMat(:,fIdx+6) = (spectralEdge(probability,Prmtr.freq,Prmtr.edgePrct))';
-    Features.featLables{fIdx+6} = char("Spectral Edge "+ Prmtr.chansName{i});
+    Features.featLables{fIdx+6} = char("Spectral Edge "+ Prmtr.chansName{i});%update the feature name
     fIdx = fIdx + 7;
     %Threshold Pass count
     Features.featMat(:,fIdx) = sum(abs(diff(Data.allData(:,:,i) >= Features.mVthrshld,[],2)),2); %get sum of passed th
-    Features.featLables{fIdx} = char("Threshold Pass Count "+ Features.mVthrshld+"mV " + Prmtr.chansName{i});
+    Features.featLables{fIdx} = char("Threshold Pass Count "+ Features.mVthrshld+"mV " + Prmtr.chansName{i});%update the feature name
     %Max Voltage
     Features.featMat(:,fIdx+1) = max(Data.allData(:,:,i),[],2);
-    Features.featLables{fIdx+1} = char("Max Voltage " + Prmtr.chansName{i});
+    Features.featLables{fIdx+1} = char("Max Voltage " + Prmtr.chansName{i});%update the feature name
     %Min Voltage
     Features.featMat(:,fIdx+2) = min(Data.allData(:,:,i),[],2);
-    Features.featLables{fIdx+2} = char("Min Voltage " + Prmtr.chansName{i});
+    Features.featLables{fIdx+2} = char("Min Voltage " + Prmtr.chansName{i});%update the feature name
     fIdx = fIdx + 3; 
 end
 

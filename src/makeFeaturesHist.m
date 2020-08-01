@@ -1,9 +1,10 @@
 function makeFeaturesHist(Prmtr,Features,Data)
 %this function loops through all features and creats histogram for each one
-% of them
+% of them.
+% each figure plot using subplot the same feat for all channles
     jump = 18; %co-responding feature for second electrode
-    lastFeat = size(Features.featMat,2);
-    hist = cell(1,Prmtr.nclass);
+    lastFeat = size(Features.featMat,2);    %singal feature
+    hist = cell(1,Prmtr.nclass);            % allocate space 
     for i = 1:(size(Features.featMat,2))/2  % loops through all features
         titlCell = cell(1,length(Prmtr.chans)); % co-responding title for all chans for each elec
         figure('Units','normalized','Position',Prmtr.Vis.globalPos);
@@ -15,6 +16,7 @@ function makeFeaturesHist(Prmtr,Features,Data)
             end
             titlCell{k} = char(Features.featLables{i}); % select the co-responded feature name
             for j = 1:Prmtr.nclass
+                %making the hist for each class
                 hist{j} = histogram(Features.featMat(Data.indexes.(Prmtr.classes{j}),i),'nor','pr');
                 hist{j}.BinEdges = Prmtr.Vis.binEdges;
                 hold on;

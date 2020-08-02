@@ -11,7 +11,7 @@ function plotSpectogram(Data,Prmtr)
         colormap(jet);
         axis square
         title(Data.combLables{i});
-        if(mod(i-1,3) == 0)
+        if(mod(i-1,Prmtr.nchans) == 0)
             ylabel ('Frequency [Hz]');
         end
         if(i>2)

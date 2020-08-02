@@ -78,7 +78,7 @@ generalFeat = 10;                               %number of general features shou
 %Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
 %Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage 
 
-nDifFeat = 0;               %number of diffs between chanle should be 1!
+nDifFeat = 1;               %number of diffs between chanle features should be 1!
 Features.nFeat = ((nBandPowerFeat+generalFeat)*nclass)+ nDifFeat; %num of total features feature selection method
 
 Features.sfMethod = "nca";  %choose feature selection method between cna  and ks
@@ -208,6 +208,7 @@ else
     printAcc(accAvg,accSD,1);
     trainAcc = (1-cell2mat(trainErr))*100;
     printAcc(trAccAvg,trAccSD,0);
+    figure('Units','normalized','Position',globalPos)
     cmChart = confusionchart(cmT,[classes(1) classes(2)]);
     cmChart.Title = char(classes(1)+" "+classes(2)+" classification");
 end

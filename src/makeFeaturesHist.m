@@ -9,7 +9,7 @@ function makeFeaturesHist(Prmtr,Features,Data)
         titlCell = cell(1,length(Prmtr.chans)); % co-responding title for all chans for each elec
         figure('Units','normalized','Position',Prmtr.Vis.globalPos);
         hold on;
-        for k = 1:length(Prmtr.chans)
+        for k = 1:Prmtr.nchans
             subplot(length(Prmtr.chans),1,k)    %subplot the same fearure for each elect
             if(k~=1)        % check if use jump for co-responding feature for diff elec
                 i = i + (jump*(k-1));
@@ -22,14 +22,16 @@ function makeFeaturesHist(Prmtr,Features,Data)
                 hold on;
                 alpha(Prmtr.Vis.trnsp);
             end
+            if(k == 1)
+                legend(Prmtr.classes{1},Prmtr.classes{2})
+            end
             title(titlCell{k}, 'Units','normalized','Position', Prmtr.Vis.globTtlPos);
-            ylabel('probability [%]');
+            ylabel('probability');
             if(k == length(Prmtr.chans))
-                xlabel('SD');
+                xlabel('Standad Deviation');
             end
         end 
         xlim(Prmtr.Vis.xLim);
-        legend(Prmtr.classes{1},Prmtr.classes{2})
         hold off;
     end
     %plot the last feature 
@@ -41,10 +43,11 @@ function makeFeaturesHist(Prmtr,Features,Data)
         hold on;
         alpha(Prmtr.Vis.trnsp);
     end
+    hold on;
     xlim(Prmtr.Vis.xLim);
     title(ttlast, 'Units','normalized','Position', Prmtr.Vis.globTtlPos);
-    xlabel('SD');
-    ylabel('probability [%]');
-    legend(Prmtr.classes{1},Prmtr.classes{2})
+    xlabel('Standard Deviation');
+    ylabel('probability');
+    legend(Prmtr.classes{1},Prmtr.classes{2});
     hold off;
 end

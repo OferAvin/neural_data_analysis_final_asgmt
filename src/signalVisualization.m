@@ -7,7 +7,7 @@ function signalVisualization(Data,clss,Prmtr)
        (randperm(length(Data.indexes.(Prmtr.classes{clss})),...
        (Prmtr.Vis.plotPerRow*Prmtr.Vis.plotPerCol)));   %choose rand trails
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
-%    sgtitle(Prmtr.classes{class} + " " + "Imagery")
+    sgtitle(Prmtr.classes{clss} + " " + "Imagery")
     for i = 1:length(randIndex_trails)
         subplot(Prmtr.Vis.plotPerCol,Prmtr.Vis.plotPerRow,i)
         C3 = plot(timeVec,Data.allData(randIndex_trails(i),:,1),'r');   %c3 signal

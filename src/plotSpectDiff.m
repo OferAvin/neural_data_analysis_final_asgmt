@@ -6,23 +6,24 @@ function plotSpectDiff(Data,Prmtr)
     spectDiffCond = {diff1,diff2};
     diffTitle = {'C3Diff','C4Diff'};
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
-    %sgtitle('Spectogram Diff')
+    sgtitle('Spectogram Diff')
     for i = 1:length(spectDiffCond)
-        subplot(length(spectDiffCond),1,i)
+        subplot(1,length(spectDiffCond),i)
         imagesc(Prmtr.time,Prmtr.freq,spectDiffCond{i})
         set(gca,'YDir','normal')
         colormap(jet);
         axis square
         title(diffTitle{i})
-        ylabel ('Frequency [Hz]');
-        if(i==2)
-            xlabel ('Time [sec]');
+        if(i == 1)
+            ylabel ('Frequency [Hz]');
         end
+        xlabel ('Time [sec]');
     end
     cb2 = colorbar;
     cb2.Label.String = 'Power diff [dB]';
-    cb2.FontSize = 14;
-    pos = [0.812024456521744,0.34541768089848,0.011770833412239,0.340874804998318];
-    set(cb2,'units','Normalized','position',pos);
+    pos = [0.91868,0.324253,0.0117708,0.340874];
+    lablPos = [3.9142857,0.54263613,0];
+    set(cb2,'units','Normalized','position',pos,'FontSize',12);
+    set(cb2.Label,'units','Normalized','position',lablPos,'FontSize',12);
     caxis('auto');
 end

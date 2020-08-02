@@ -111,11 +111,11 @@ Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
 
 %% data visualization
 %visualization of the signal in Voltage[muV] for rand co-responding trails 
-for i = 1:length(classes)
+for i = 1:nclass
       signalVisualization(Data,i,Prmtr)
 end
 % calculating PWelch for all condition
-for i = 1:length(classes)
+for i = 1:nclass
     for j = 1:length(Prmtr.chans)
         currClass = Prmtr.classes(i);
         chanCls = char(currClass + chansName(j));

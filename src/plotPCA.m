@@ -28,7 +28,7 @@ function plotPCA(featMet,data,Prmtr)
     axis square
     xlabel('PC1'); ylabel('PC2'); zlabel('PC3');
     set(gca,'YDir','normal')
-    leg3 = legend('Left','Right');
+    leg3 = legend(Prmtr.classes(1),Prmtr.classes(2));
     pos2 = [0.01203125,0.839907407407407,0.062239583333333,0.078148148148148];
     set(leg3,'position',pos2)
 end

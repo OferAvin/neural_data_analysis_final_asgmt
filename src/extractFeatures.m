@@ -50,13 +50,13 @@ for i = 1:length(Prmtr.chans)
     fIdx = fIdx + 7;
     %Threshold Pass count
     Features.(Matrix)(:,fIdx) = sum(abs(diff(Data(:,:,i) >= Features.mVthrshld,[],2)),2); %get sum of passed th
-    Features.featLables{fIdx} = char("Threshold Pass Count "+ Features.mVthrshld+"mV " + Prmtr.chansName{i});%update the feature name
+    Features.featLables{fIdx} = char(Features.mVthrshld+"\muV "+"Threshold Pass Count "+ Prmtr.chansName{i});%update the feature name
     %Max Voltage
     Features.(Matrix)(:,fIdx+1) = max(Data(:,:,i),[],2);
-    Features.featLables{fIdx+1} = char("Max Voltage " + Prmtr.chansName{i});%update the feature name
+    Features.featLables{fIdx+1} = char("Max Amplitude " + Prmtr.chansName{i});%update the feature name
     %Min Voltage
     Features.(Matrix)(:,fIdx+2) = min(Data(:,:,i),[],2);
-    Features.featLables{fIdx+2} = char("Min Voltage " + Prmtr.chansName{i});%update the feature name
+    Features.featLables{fIdx+2} = char("Min Amplitude " + Prmtr.chansName{i});%update the feature name
     fIdx = fIdx + 3; 
 end
 

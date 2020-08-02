@@ -13,9 +13,10 @@ nTrials = size(P_C_S.data,1);               % num of trails
 trialLen = size(P_C_S.data,2);              % num of sample
 timeVec = dt:dt:trialLen/fs;                %create time vec according to parameters
 f = 0.5:0.1:40;                             % relevant freq range
-window = 1.5;                               %window length in secs                         
-windOverlap = 1.3;                          %window overlap length in secs
-numOfWindows = floor((size(P_C_S.data,2)-window*fs)/(window*fs-windOverlap*fs)+1); %number of windows
+window = 1.1;                               %window length in secs                         
+windOverlap = 1;                          %window overlap length in secs
+numOfWindows = floor((size(P_C_S.data,2)-window*fs)/...
+    (window*fs-floor(windOverlap*fs)))+1;   %number of windows
 miStart = 2.25;                             %motor imagery start in sec
 miPeriod = timeVec(timeVec >= miStart);     %motor imagery period
 edgePrct = 90;                              %spectral edge percentaile
@@ -62,30 +63,31 @@ for i = 1:nclass
 end
 
 %% features
-% creating struct for the features
-Features.nFeatSelect = 8 ;     %number of features to select for classification
+
 %band power features 1st arr - band, 2nd arr - time range
 Features.bandPower{1} = {[15,20],[3.5,6]};
 Features.bandPower{2} = {[32,36],[4,6]};
 Features.bandPower{3} = {[9,11],[5.5,6]};
 Features.bandPower{4} = {[17,21],[1.2,2.7]};
 nBandPowerFeat = length(Features.bandPower)*2;  %bandpower and relative bandpower for each relevant range
-%mV threshold feature
-Features.mVthrshld = 4;                         %in muV
+
+Features.mVthrshld = 4;                         %threshold feature in muV
+
 Features.diffBetween = ["C3","C4"];             % choose two elctrode to calc diff
 
 generalFeat = 10;                               %number of general features should be 10!
 %Total Power,Root Total Power,Slope,Intercept,Spectral Moment,Spectral Entropy
 %Spectral Edge,Threshold Pass Count,Max Voltage,Min Voltage 
 
-nDifFeat = 1;               %number of diffs between chanle features should be 1!
+nDifFeat = 1;                   %number of diffs between chanle features should be 1!
 Features.nFeat = ((nBandPowerFeat+generalFeat)*nclass)+ nDifFeat; %num of total features feature selection method
 
-Features.sfMethod = "nca";  %choose feature selection method between cna  and ks
-Features.distPrecision = 5;    %only in case you run ks for feature selection           
+Features.nFeatSelect = 8 ;      %number of features to select for classification
+Features.fsMethod = "nca";      %choose feature selection method between cna  and ks
+Features.distPrecision = 5;     %only in case you run ks for feature selection           
 
 %% Model training
-k = 5;                  %k fold parameter
+k = 5;                          %k fold parameter
 results = cell(k,1);    
 trainErr = cell(k,1);
 acc = zeros(k,1);
@@ -94,13 +96,13 @@ acc = zeros(k,1);
 globalPos = [0.2,0.15,0.6,0.7]; %global position for figures
 globTtlPos = [0.45,0.999];      %global title position
 %first visualization
-signalPerFig = 20;  %signals per figuer 
-plotPerRow = 4;     %plots per row 
+signalPerFig = 20;              %signals per figuer 
+plotPerRow = 4;                 %plots per row 
 plotPerCol = signalPerFig/plotPerRow; %make sure signalPerFig divisible with plotPerRow
 %histogram
-xLim = [-4 4];      %x axis lims in sd 
+xLim = [-4 4];                  %x axis lims in sd 
 binWid = 0.2;
-trnsp = 0.5;        %bars transparency
+trnsp = 0.5;                    %bars transparency
 binEdges = xLim(1):binWid:xLim(2);
 
 Prmtr.Vis = struct('globalPos', globalPos,'globTtlPos',globTtlPos,...
@@ -127,10 +129,10 @@ end
 %visualization PWelch
 plotPwelch(Data,Prmtr)
  
-% calculating spectrogram for all conditions
+%calculating spectrogram for all conditions
 
 for i =1:length(Data.combLables)    %looping all condition
-   Data.spect.(Data.combLables{i}) = zeros(size(Data.(Data.combLables{i}),1),size(f,2),numOfWindows);   %allocate space
+   
    for j = 1:size(Data.(Data.combLables{i}),1)
       Data.spect.(Data.combLables{i})(j,:,:) = spectrogram(Data.(Data.combLables{i})(j,:)',...
           Prmtr.winLen,Prmtr.winOvlp,Prmtr.freq,Prmtr.fs,'yaxis');
@@ -168,7 +170,7 @@ end
 
 for iter = 1:numOfIter  %in case that train mode is on this loop will finde the best num of features
     %select only the nFeatSelect best features
-    if isTrainMode 
+    if isTrainMode == 1 
         Features.nFeatSelect = iter;
     end
     [featIdx,selectMat,featOrder] = selectFeat(Features,Data.lables); 
@@ -182,8 +184,8 @@ for iter = 1:numOfIter  %in case that train mode is on this loop will finde the 
         trainSet = logical(idxSegments ~= i)';
         [results{i},trainErr{i}] =...
             classify(selectMat(validSet,:),selectMat(trainSet,:),Data.lables(trainSet),'linear');
-        acc(i) = sum(results{i} == Data.lables(validSet));
-        acc(i) = acc(i)/length(results{i})*100;
+        acc(i) = sum(results{i} == Data.lables(validSet));  %sum num of correct results
+        acc(i) = acc(i)/length(results{i})*100;             
         %build the confusion matrix
         cm = confusionmat(Data.lables(validSet),results{i});
         cmT = cmT + cm;
@@ -201,12 +203,11 @@ for iter = 1:numOfIter  %in case that train mode is on this loop will finde the 
     trAccSD(iter) = std(trainAcc);
 end
 
-if isTrainMode == 1
+if isTrainMode == 1             %plots for checking best features number 
     disp(char("optimal number of features is: "+...
-        analyzeNumOfFeat(Prmtr,[f1,accAvg,accSD,trAccAvg,trAccSD],iter)));
-else
-    printAcc(accAvg,accSD,1);
-    trainAcc = (1-cell2mat(trainErr))*100;
+        analyzeNumOfFeat(Prmtr,[f1,accAvg,accSD,trAccAvg,trAccSD],Features)));
+else                            %in regular mode, print accuracy and confusion matrix
+    printAcc(accAvg,accSD,1);      
     printAcc(trAccAvg,trAccSD,0);
     figure('Units','normalized','Position',globalPos)
     cmChart = confusionchart(cmT,[classes(1) classes(2)]);
@@ -226,7 +227,7 @@ testData = data(:,:,1:length(Prmtr.chans));
 
 %Test feature extraction
 
-Features.TestFeatMat = zeros(size(testData,1),Features.nFeat);                   %allocate space
+Features.TestFeatMat = zeros(size(testData,1),Features.nFeat);              %allocate space
 Features = extractFeatures(testData,Prmtr,Features,'TestFeatMat',fIdx);     %calc and extract all features
 
 %Test feature selection

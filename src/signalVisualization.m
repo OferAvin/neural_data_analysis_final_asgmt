@@ -23,6 +23,6 @@ function signalVisualization(Data,clss,Prmtr)
         end
     end
     hold on
-    Leg = legend([C3,C4],{'C3','C4'});
+    Leg = legend([C3,C4],Prmtr.classes(1),Prmtr.classes(2));
     set(Leg,'Position',[0.848091556210113 0.925793650793651 0.113690476190476 0.071031746031746],'Units', 'normalized');
 end

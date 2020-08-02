@@ -26,7 +26,7 @@ function makeFeaturesHist(Prmtr,Features,Data)
                 legend(Prmtr.classes{1},Prmtr.classes{2})
             end
             title(titlCell{k}, 'Units','normalized','Position', Prmtr.Vis.globTtlPos);
-            ylabel('probability');
+            ylabel('Probability');
             if(k == length(Prmtr.chans))
                 xlabel('Standad Deviation');
             end

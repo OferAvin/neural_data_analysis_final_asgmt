@@ -1,11 +1,11 @@
-function maxF1Idx = analyzeNumOfFeat(Prmtr,analyzeMath,numSelectFeat)
+function maxF1Idx = analyzeNumOfFeat(Prmtr,analyzeMath,Features)
 % this function make an advance analysis to detarmain what is the best num
 % of feature which will perform bast at the test.
 % function use F1 Score and error of accuracy
 % Prmtr - all parameter of the Data
-    numFeatVec = 1:1:numSelectFeat;
+    numFeatVec = 1:1:Features.nFeatSelect;
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
-    suptitle('Validation Vs Train Accuracy');
+    suptitle(char('Validation Vs Train Accuracyfor '+Features.fsMethod+' method'));
     % validation plot
     ValErrorVec = 100 - analyzeMath(:,2);   %turning the acc to error
     [minErr,minErIdx] = min(ValErrorVec);
@@ -32,7 +32,7 @@ function maxF1Idx = analyzeNumOfFeat(Prmtr,analyzeMath,numSelectFeat)
     set(Leg2,'location','northeast');
     %F1 score plot
     figure('Units','normalized','Position',Prmtr.Vis.globalPos);
-    suptitle('F1 Score by Num Of Features');
+    suptitle(char('F1 Score by Num Of Features for '+Features.fsMethod+' method'));
     P = plot(numFeatVec,analyzeMath(:,1),'b');
     hold on;
     xlabel('Num Of Selected Feature')
@@ -42,5 +42,5 @@ function maxF1Idx = analyzeNumOfFeat(Prmtr,analyzeMath,numSelectFeat)
     [maxF1,maxF1Idx] = max(analyzeMath(:,1));
     Pmax = plot(numFeatVec(maxF1Idx),maxF1,'or','LineWidth',3);
     Leg3 = legend([P,Pmax],{'F1 score','max score'});
-    set(Leg3,'location','northeast');
+    set(Leg3,'location','southeast');
 end
